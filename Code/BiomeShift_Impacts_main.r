@@ -840,7 +840,6 @@
     save(PFT_ES_all,file="PFT_ES_all_controllingGDPandArea_es_ac_notFood_adjustedImportance_allClimProjections.Rda")
    
     
-
     load("NC_change_controllingGDPandArea_es_ac_notFood_adjustedImportance_allClimProjections.Rda")
     load("PFT_ES_all_controllingGDPandArea_es_ac_notFood_adjustedImportance_allClimProjections.Rda")
     ## ES values per hectare
