@@ -578,7 +578,7 @@
     #Calculate NatCap loss based on PFT (start)   
    
         a_h <- PFT_movement
-        a_h <- a_h[which(a_h$Percent>0),]
+        a_h <- a_h[which(!is.nan(a_h$Percent)),]
         TypeES <- c("All","Provisioning","Non-provisioning")
             firstcountry =1
         for(j in 1:177){
