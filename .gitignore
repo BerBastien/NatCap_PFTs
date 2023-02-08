@@ -2,6 +2,12 @@ Figures/
 Results/
 Files/
 Data/
+OtherData/
 Write UP/
 elas_panels_files/
+PreviousCode/
 *.xlsx
+*.png
+*.zip
+*.html
+*.Rda
