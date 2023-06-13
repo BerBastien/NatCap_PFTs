@@ -2,7 +2,6 @@
 
     x <- c('raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth")
     lapply(x, require, character.only = TRUE)
-    #install.packages('marginaleffects')
     setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
     dir1 <- "C:/Users/basti/Box/VegetationData/"
     isos <- world$iso_a2
@@ -37,9 +36,6 @@
         wealth <- read.csv('Data\\WorldBank_WealthAccounts_2018USD.csv')
         colnames(wealth) <- c("Country.Name" ,"Country.Code",   "Series.Name" , "Series.Code",
         1995:2018)
-        #glimpse(wealth)
-        #table(wealth$countrycode)
-        dim(table(wealth$countrycode))
 
         years <- c(1995:2018)
         for (i in 1:length(years)){
@@ -55,18 +51,9 @@
                 Wealth <- rbind(Wealth,w3)
             }
         }
-        #glimpse(Wealth)
-        #levels(factor(Wealth$countrycode))[levels(factor(Wealth$countrycode)) %in% isos_missin3]
-        
-        #ggplot(data=Wealth, aes(x = year, y=log(N), group = countrycode)) + 
-        #geom_line(aes(color=countrycode))  +
-        #scale_colour_discrete(guide = 'none') +
-        #scale_x_discrete(expand=c(0, 1)) +
-        #geom_dl(aes(label = countrycode), method = list(dl.combine("first.points", "last.points")), cex = 0.8)
 
         gdp <- read.csv('Data\\GDP_2015USD_19952018.csv')
         colnames(gdp) <- c("countryname", "countrycode", "seriesname","seriescode",1995:2018)
-        #glimpse(gdp)
         for (i in 1:length(years)){
             yeari <- years[i]
             gdp2 <- gdp[,which(colnames(gdp) %in% 
@@ -87,13 +74,11 @@
         glimpse(wealth)
         wealth$GDP <- as.numeric(as.character(wealth$GDP)) * 1.06 #converting 2015 to 2018 usd
         colnames(wealth)[3] <- "countryname"
-        #table(wealth$countrycode)
         
 
         
         population  <- read.csv('Data\\Pop1995_2018.csv')
         colnames(population) <-  c("countryname", "countrycode", "seriesname","seriescode",1995:2018)
-        #glimpse(population)
         years <- c(1995:2018)
         for (i in 1:length(years)){
             yeari <- years[i]
@@ -101,8 +86,6 @@
                 c("countryname", "countrycode", "seriesname",yeari))]
             w3 <- reshape(w2, idvar=c("countryname", "countrycode"), 
                 timevar="seriesname", direction="wide")
-            #glimpse(w3)
-            #w3 <- w3[,c(1,2,5)]
             w3[,4] <- yeari
             colnames(w3) <- c("countryname","countrycode","Population","year")
             if (i==1){Population <- w3} else {
@@ -113,14 +96,7 @@
         wdata_1995_2018 <- wealth_data
         glimpse(Population[Population$countrycode=="RUS",])
         glimpse(wealth_data[wealth_data$countrycode=="RUS",])
-        #glimpse(wealth_data)
-        #table(wdata_1995_2018$countrycode)
-
-        #labor  <- read.csv('Data\\laborIncomeShare.csv') #Labour income share as a percent of GDP -- ILO modelled estimates, July 2019 (%). Downloaded from ILOSTAT. Last update on 10JAN21.
-        #colnames(labor) <- c("countryname", "source", "year", "labor_share")
-        #glimpse(labor)
-        #b <- merge(wealth_data,labor, by = c("countrycode","year"),all.x=T)
-        #wealth_data <- b
+        glimpse(wealth_data[wealth_data$countrycode=="CHN",])
 
         wealth_data$H <- as.numeric(as.character(wealth_data$H))
         wealth_data$K <- as.numeric(as.character(wealth_data$K))
@@ -133,42 +109,33 @@
         wealth_data$Foreign <- as.numeric(as.character(wealth_data$Foreign))
         wealth_data$Npa <- as.numeric(as.character(wealth_data$Npa))
         wealth_data$TotalWealth <- as.numeric(as.character(wealth_data$TotalWealth))
-        #wealth_data$labor_share <- as.numeric(as.character(wealth_data$labor_share))
         wealth_data$Population <- as.numeric(as.character(wealth_data$Population))
         
-        #glimpse(wealth_data)
-        
         wealth_data <- wealth_data[,-which(names(wealth_data) %in% c("countryname.y","NA","source"))]
-        #glimpse(wealth_data)
-        #table(wealth_data$labor_share)
 
-        #ggplot(wealth_data[])+
-        #geom_point(aes(x=log(GDP),y=log(Nfisheries/K),color=countrycode,group=countrycode))
-
-        # Forest Rents (start)
+    
+    # Forest Rents (end)    
         Natrents  <- read.csv('Data\\ForestRents_2018.csv') #World Bank Data
         
         colnames(Natrents) <- c("countryname", "countrycode", "seriesname","seriescode",1995:2018)
         years <- c(1995:2018)
+        Natrents$countrycode
+        
         for (i in 1:length(years)){
             yeari <- years[i]
             w2 <- Natrents[,which(colnames(Natrents) %in% 
                 c("countryname", "countrycode", "seriesname",yeari))]
             w3 <- reshape(w2, idvar=c("countryname", "countrycode"), 
                 timevar="seriesname", direction="wide")
-            #glimpse(w3)
             w3 <- w3[,c(1,2,3)]
             w3[,4] <- yeari
             colnames(w3) <- c("countryname","countrycode","NatRents","year")
             if (i==1){Natrents2 <- w3} else {
                 Natrents2  <- rbind(Natrents2,w3)
             }
-        }
-        #glimpse(Natrents2)
-        #glimpse(wealth_data)    
+        }  
         
         wealth_data <- merge(wealth_data,Natrents2, by = c("countrycode","year"),all.x=TRUE)
-        #glimpse(wealth_data)
         wealth_data$NatRents <- as.numeric(as.character(wealth_data$NatRents))
         save(file="Data/wealth_data.Rda",wealth_data)
 
@@ -176,9 +143,6 @@
         names(r5)<-c("r5","countrycode")
 
         wealth_data <- merge(wealth_data,r5,by="countrycode")
-        
-
-        #table(wealth_data$countrycode)
     # Forest Rents (end)
 
     wealth2018 <- wealth_data[which(wealth_data$year==2018),]
@@ -241,19 +205,24 @@
 
     levels(factor(ww$r5))
     scaleFUN <- function(x) sprintf("%.4f", x)
+    
+    minlim <-min(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
+    maxlim <-max(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
+    
     ggplot(ww[which(ww$year==2018),],aes(x=nN*100,y=mN*100))+
     theme_bw() +
+    #geom_abline(intercept = 0, slope = 1)+
     geom_density_2d_filled(contour_var = "ndensity",aes(fill=r5,alpha=..level..),bins=4,size=1)+
     scale_alpha_discrete(range = c(0,0.9,1,1),guide = guide_none()) +
     geom_point(aes(x=100*nN,y=100*mN,size=log(GDP)),alpha=0.5)+
+    #coord_cartesian(xlim = c(minlim,maxlim),ylim = c(minlim,maxlim))+
     scale_y_continuous(trans="log2",labels=scaleFUN)+
     scale_x_continuous(trans="log2",labels=scaleFUN)+
-        xlab("Nonmarket natural capital \n(% of Inclusive Wealth)") + 
-        ylab("Market natural capital \n(% of Inclusive Wealth)") + 
+        xlab("Non-market natural capital \n(% of Total Wealth)") + 
+        ylab("Market natural capital \n(% of Total Wealth)") + 
         scale_fill_discrete(name="Region")+
-        #scale_shape_discrete(name="Natatural Capital change\nsince 1995")+
         scale_size_continuous(name="Log GDP \nin 2018")
-        ggsave("Figures/F1_NatCap_R5.png",dpi=600)
+        ggsave("Figures/Final Figures/Submission 3/F1_NatCap_R5.png",dpi=600)
 
 ## Plot Figure 1 (END)
 
@@ -265,7 +234,6 @@
                     value=double(),
                     year=integer())
     clim_models <- c("hadgem2-es","gfdl-esm2m","ipsl-cm5a-lr","miroc5")
-    #clim_models <- c("gfdl-esm2m","ipsl-cm5a-lr")
     clim_scen <- c("rcp60","rcp26","rcp85")
     soc_scen <- c("2005soc","rcp26soc","recp60soc")
     soc_scen <- c("2005soc")
@@ -276,8 +244,6 @@
     "trbrev",
     "trbrrg","tendev","tebrev",
     "bondev","bobrsu","bondsu","c3gra","c4gra")
-    #pfts_lpj <- c("bne","bine","bns","tebs","ibs","tebe","trbe","tribe","trbr") 
-    #pfts_orc <- c("tebrsu","trbrev","trbrrg","tendev","tebrev","tebrsu","bondev","bobrsu","bondsu")
 
 
     pfts_names_lpj <- c("Boreal needleleaved evergreen","Boreal shade intolerant needleleaved evergreen", 
@@ -323,17 +289,24 @@
     #* The last two PFTs are physiologically identical to the previous two but output separately*
     df_biome_area_change <- data.frame(decade=double(),dif_biome_area=double(),area_initial=double(),scen=character(),dgvms_model=character(),gcm_model=character(),soc_scen=character(),PFT=character())
     first <- 1
-    for (soci in 1:1){
-        for (sceni in 1:length(clim_scen)){
+    for (soci in 1:1){ #soci <- 1
+        #for (sceni in 1:length(clim_scen)){
+        for (sceni in 1){
             soc_scen <- c("2005soc",paste0(clim_scen[sceni],"soc"))
-            for (dgvmsi in 3:length(dgvms)){
+            for (dgvmsi in 3){
             #for (dgvmsi in 1:length(dgvms)){
                 pfts <- eval(parse(text=paste0("pfts_",dgvms[dgvmsi])))
-                for (climi in 1:length(clim_models)){
-                    for (p in 1:length(pfts)){
+                for (climi in 1:length(clim_models)){ #climi<- 2
+                    for (p in 1:length(pfts)){ #p <- 17
                         dname <- paste("pft-",pfts[p],sep="")
+                        dname_lai <- paste("lai-",pfts[p],sep="")
                         listoffiles <- list.files(paste0(dir1,"PFTs_",dgvms[dgvmsi],"/"))
                         ncname <- paste(dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_pft-",pfts[p],"_global_annual_2006_2099.nc4",sep="")
+                        #lai
+                                
+                            listoffiles_lai <- list.files(paste0(dir1,"PFTs_",dgvms[dgvmsi],"_lai/"))
+                            ncname_lai <- paste(dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_lai-",pfts[p],"_global_annual_2006_2099.nc4",sep="")
+                        #lai
                         if(ncname %notin% listoffiles){
                             next
                         }
@@ -343,8 +316,8 @@
                         #ncname <- paste0(dir1,"PFTs_",dgvms[dgvmsi],"/caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_pft-brevdttht_global_annual_2006_2099.nc4")
                      
                         ncin <- nc_open(ncname)
-                        #print(ncin)    
-                        #get units
+                        ncname_lai <- paste(dir1,"PFTs_",dgvms[dgvmsi],"_lai/",ncname_lai,sep="")
+                        ncin_lai <- nc_open(ncname_lai)
                         lon <- ncvar_get(ncin,"lon")
                         lat <- ncvar_get(ncin,"lat")
                         time_veg <- ncvar_get(ncin,"time")
@@ -353,17 +326,12 @@
 
                         
                         var_array <- ncvar_get(ncin,dname, start = c(1,1,1), count=c(-1,-1,-1)) #start, number in dimension to start. count: hopw many in that dimension
-                        #glimpse(var_array)
-                        #var_array <- var_array[,,16:85] #2021 to 2090
-                        #numdecades <- floor(dim(var_array)[3]/10)
-                        #decadal <- array(numeric(),c(720,360,numdecades)) 
-                        #dif_decadal <- array(numeric(),c(720,360,numdecades-1)) 
-                        #numperiods <- 4
+                        var_array_lai <- ncvar_get(ncin_lai,dname_lai, start = c(1,1,1), count=c(-1,-1,-1)) #start, number in dimension to start. count: hopw many in that dimension
                         numperiods <- 8
                         periods <- array(numeric(),c(360,720,numperiods)) 
                         dif_periods <- array(numeric(),c(360,720,numperiods-1)) 
-                        #periods_minyear <- c(1,16,36,76) #years 2006,2021,2041,2081
-                        #periods_maxyear <- c(15,35,55,94) #years 2020,2040,2060,2099
+                        periods_lai <- array(numeric(),c(360,720,numperiods)) 
+                        dif_periods_lai <- array(numeric(),c(360,720,numperiods-1)) 
                         
                         periods_minyear <- c(1,25,35,45,55,65,75,85) #years 2006,2030,2040,2050,2060,2070,2080,2090
                         periods_maxyear <- c(15,34,44,54,64,74,84,94) #years 2020,2039,2949,2959,2969,2979,2989,2099
@@ -371,24 +339,32 @@
                         for (d in (1:numperiods)){ 
                             period_array <- var_array[,,periods_minyear[d]:periods_maxyear[d]] #decade d of data
                             period_mean <- rowMeans(period_array, dims = 2, na.rm = TRUE)
+                            period_array_lai <- var_array_lai[,,periods_minyear[d]:periods_maxyear[d]] #decade d of data
+                            period_mean_lai <- rowMeans(period_array_lai, dims = 2, na.rm = TRUE)
                             if (dgvms[dgvmsi]=="lpj" | dgvms[dgvmsi]=="car"){
                                 periods[,,d] <- t(period_mean*0.01)
                             }else{
                                 periods[,,d] <- t(period_mean)
                             }
+
+                            periods_lai[,,d] <- t(period_mean_lai)
+
+                            if (dgvms[dgvmsi]=="car"){
+                                periods[,,d] <- periods[,,d]*periods_lai[,,d] 
+                                min(periods_lai[,,d],na.rm=TRUE)
+                            }
                             
                             if (d>1){
                                 dif_periods[,,d-1] <- periods[,,d] - periods[,,1]
+                                dif_periods_lai[,,d-1] <- periods_lai[,,d] - periods_lai[,,1]
 
                             }
                         }
                        
                         periods_veg_brick <- brick(periods, xmn=min(lon), xmx=max(lon), ymn=min(lat), ymx=max(lat), crs=CRS("+proj=longlat +datum=WGS84 +no_defs")) #2021-2090
-                        #plot(subset(periods_veg_brick,8))     
-                        #plot(brick(var_array[,,c(1,56)]))                   
-                        #assign(paste("periods_",pfts[p],"_brick_",clim_models[climi],"_rcp6",sep=""), periods_veg_brick)
+                        periods_veg_brick_lai <- brick(periods_lai, xmn=min(lon), xmx=max(lon), ymn=min(lat), ymx=max(lat), crs=CRS("+proj=longlat +datum=WGS84 +no_defs")) #2021-2090
                         dif_periods_veg_brick <- brick(dif_periods, xmn=min(lon), xmx=max(lon), ymn=min(lat), ymx=max(lat), crs=CRS("+proj=longlat +datum=WGS84 +no_defs")) #2021-2090
-                        #plot(subset(dif_periods_veg_brick,5))
+                        dif_periods_veg_brick_lai <- brick(dif_periods_lai, xmn=min(lon), xmx=max(lon), ymn=min(lat), ymx=max(lat), crs=CRS("+proj=longlat +datum=WGS84 +no_defs")) #2021-2090
                         
                         if(first==1){
                         area_raster <- (area((subset(dif_periods_veg_brick,1))))
@@ -402,17 +378,8 @@
                             df_biome_area_change <-  rbind(df_biome_area_change,df_biome_area_change2)
                             
                         }
-                        #assign(paste("dif_periods_",pfts[p],"_brick_rcp6",sep=""), dif_periods_veg_brick)
-                        #years_veg[16:85]
-                        #plot(t(subset(yearly_veg_brick,1)), main = "Boreal needleleaved evergreen 2021 (% in gridcell)")
-                        #dpft <- t(subset(decadal_veg_brick,7)) - t(subset(decadal_veg_brick,1))
-                        #plot( dpft, main = "% change in Boreal needleleaved evergreen \n under rcp6 (2090's-2020's)")
-
-                        #yearly_veg_brick_10 <- brick(var_array[,,1:10], xmn=min(lat), xmx=max(lat), ymn=min(lon), ymx=max(lon), crs=CRS("+proj=longlat +datum=WGS84 +no_defs"))
                         save(periods_veg_brick,file=paste("Data/PFT_rasters/periods_",dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_pft-",pfts[p],"_global_annual_2006_2099.Rdata",sep=""))
                         save(dif_periods_veg_brick,file=paste("Data/PFT_rasters/dif_periods_",dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_pft-",pfts[p],"_global_annual_2006_2099.Rdata",sep=""))
-                        #save(periods_veg_brick,file=paste("Data/PFT_rasters/periods_caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_pft-brevdttht_global_annual_2006_2099.Rdata",sep=""))
-                        #save(dif_periods_veg_brick,file=paste("Data/PFT_rasters/dif_periods_caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_pft-brevdttht_global_annual_2006_2099.Rdata",sep=""))
                         print( ncname)
                     } 
                 }
@@ -421,8 +388,7 @@
         
     }
     
-    write.csv(df_biome_area_change,"Data/biome_area.csv")
-    #write.csv(df_biome_area_change,"Data/biome_area_nograss.csv")
+    #write.csv(df_biome_area_change,"Data/biome_area.csv")
     df_biome_area_change <- read.csv("Data/biome_area.csv")
     glimpse(df_biome_area_change)
 
@@ -443,11 +409,8 @@
 
 
                         ncname <- paste(dir1,"cveg_",dgvms[dgvmsi],"/",dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_cveg-",pfts[p],"_global_annual_2006_2099.nc4",sep="")
-                        #ncname <- paste0(dir1,"cveg_",dgvms[dgvmsi],"/caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_cvegbrevdttht_global_annual_2006_2099.nc4")
-                     
+                       
                         ncin <- nc_open(ncname)
-                        #print(ncin)    
-                        #get units
                         lon <- ncvar_get(ncin,"lon")
                         lat <- ncvar_get(ncin,"lat")
                         time_veg <- ncvar_get(ncin,"time")
@@ -456,18 +419,10 @@
 
                         
                         var_array <- ncvar_get(ncin,dname, start = c(1,1,1), count=c(-1,-1,-1)) #start, number in dimension to start. count: hopw many in that dimension
-                        #glimpse(var_array)
-                        #var_array <- var_array[,,16:85] #2021 to 2090
-                        #numdecades <- floor(dim(var_array)[3]/10)
-                        #decadal <- array(numeric(),c(720,360,numdecades)) 
-                        #dif_decadal <- array(numeric(),c(720,360,numdecades-1)) 
-                        #numperiods <- 4
                         numperiods <- 8
                         periods <- array(numeric(),c(360,720,numperiods)) 
                         dif_periods <- array(numeric(),c(360,720,numperiods-1)) 
-                        #periods_minyear <- c(1,16,36,76) #years 2006,2021,2041,2081
-                        #periods_maxyear <- c(15,35,55,94) #years 2020,2040,2060,2099
-                        
+                    
                         periods_minyear <- c(1,25,35,45,55,65,75,85) #years 2006,2030,2040,2050,2060,2070,2080,2090
                         periods_maxyear <- c(15,34,44,54,64,74,84,94) #years 2020,2039,2949,2959,2969,2979,2989,2099
                         
@@ -505,17 +460,8 @@
                             df_biome_area_change <-  rbind(df_biome_area_change,df_biome_area_change2)
                             
                         }
-                        #assign(paste("dif_periods_",pfts[p],"_brick_rcp6",sep=""), dif_periods_veg_brick)
-                        #years_veg[16:85]
-                        #plot(t(subset(yearly_veg_brick,1)), main = "Boreal needleleaved evergreen 2021 (% in gridcell)")
-                        #dpft <- t(subset(decadal_veg_brick,7)) - t(subset(decadal_veg_brick,1))
-                        #plot( dpft, main = "% change in Boreal needleleaved evergreen \n under rcp6 (2090's-2020's)")
-
-                        #yearly_veg_brick_10 <- brick(var_array[,,1:10], xmn=min(lat), xmx=max(lat), ymn=min(lon), ymx=max(lon), crs=CRS("+proj=longlat +datum=WGS84 +no_defs"))
                         save(periods_veg_brick,file=paste("Data/cveg_rasters/periods_",dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_cveg",pfts[p],"_global_annual_2006_2099.Rdata",sep=""))
                         save(dif_periods_veg_brick,file=paste("Data/cveg_rasters/dif_periods_",dgvms_long[dgvmsi],"_",clim_models[climi],"_ewembi_",clim_scen[sceni],"_",soc_scen[soci],"_co2_cveg",pfts[p],"_global_annual_2006_2099.Rdata",sep=""))
-                        #save(periods_veg_brick,file=paste("Data/cveg_rasters/periods_caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_cvegbrevdttht_global_annual_2006_2099.Rdata",sep=""))
-                        #save(dif_periods_veg_brick,file=paste("Data/cveg_rasters/dif_periods_caraib_gfdl-esm2m_ewembi_rcp60_2005soc_co2_cvegbrevdttht_global_annual_2006_2099.Rdata",sep=""))
                         print( ncname)
                     } 
                 }
@@ -537,7 +483,6 @@
 
             for (i in 1:7){
                 
-                #meant <- tas_df$V2[c(which(tas_df$V1==(2020+(i-1)*10)):which(tas_df$V1==(2020+(i)*10)))]
                 
                     base_t <- mean(tas_df$V2[c(which(tas_df$V1==(2006)):which(tas_df$V1==(2020)))])
                     mean_t <- mean(tas_df$V2[c(which(tas_df$V1==(2030+(i-1)*10)):which(tas_df$V1==(2030+(i)*9)))])
@@ -655,15 +600,10 @@
         class(pft_file_names)
         length(pft_file_names)
         pft_file_names <- discard_pattern(pft_file_names,c("rcp60soc"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("c3"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("c4"))
         pft_file_names <- discard_pattern(pft_file_names,c("rcp26soc"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("lpj"))
         pft_file_names <- keep_pattern(pft_file_names,c("dif"))
         pft_file_names <- keep_pattern(pft_file_names,c("car"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("orc"))
         temp_levels <- c(2)
-        #temp_levels <- c(0.5)
         for (temp_levels_i in 1:length(temp_levels)){
         first <- 1
         temp_level <- temp_levels[temp_levels_i]
@@ -683,13 +623,7 @@
             temp <- df_tas[which(df_tas$scen==clim_scen[scen_i] & df_tas$gcm_model==clim_models[clim_i]),]
 
            
-            # if(temp$dif_t[which.max(temp$dif_t-temp_level)]<0){
-            #     decade_i <- which.max(temp$dif_t-temp_level)
-            # } else{
-            #     which.min((abs(temp$dif_t-temp_level)))
-
-            # }
-
+            
             decade_i <- which.min((abs(temp$dif_t-temp_level)))
 
         if (abs(temp$dif_t[decade_i]-temp_level) > 0.3){
@@ -697,7 +631,6 @@
             next
             }
             
-            #decade_i <- which(abs(temp$dif_t-temp_level)<0.2)
             if(identical(decade_i, integer(0))){
                     print(paste("identical next",i))
                     next
@@ -731,25 +664,7 @@
         }
 
 
-            #crs(pft_sum_rcp26) <- "+init=EPSG:4326"
-            #pft_sum_rcp26<- projectRaster(pft_sum_rcp26, crs='+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
             
-            
-            
-            # pft_sum_poly_rob1 <- 
-            # raster::subset(pft_change_0.5C,1) %>% 
-            # raster::rasterToPolygons() %>% 
-            # sf::st_as_sf() 
-
-            # pft_sum_poly_rob2 <- 
-            # raster::subset(pft_change_1C,1) %>% 
-            # raster::rasterToPolygons() %>% 
-            # sf::st_as_sf() 
-
-            # pft_sum_poly_rob3 <- 
-            # raster::subset(pft_change_1.5C,1) %>% 
-            # raster::rasterToPolygons() %>% 
-            # sf::st_as_sf() 
 
             pft_sum_poly_rob4 <- 
             raster::subset(pft_change_2C,1) %>% 
@@ -762,43 +677,12 @@
             library(wesanderson)
             pal <- palette(brewer.pal(n = 3, name = "Spectral"))
 
-            # a <- ggplot() +
-            # theme_void() +
-            #  geom_sf(data = pft_sum_poly_rob1,aes(fill =100* layer.1), color = NA)+
-            # scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", oob = scales::squish)+
-            
-            # #scale_fill_gradient2(midpoint=50, low ="#ffffbf" , mid = "red",
-            # #                high = "black",na.value="transparent",name="Land cover change (%)",guide = FALSE)+
-            # geom_sf(data = world_coast)+
-            # ggtitle("+0.5C")+
-            # theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
-
-            # b <- ggplot() +
-            # theme_void() +
-            # geom_sf(data = pft_sum_poly_rob2,aes(fill =100* layer), color = NA) +
-            # scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", oob = scales::squish)+
-            # #scale_fill_gradient2(midpoint=50, low ="#ffffbf" , mid = "red",
-            #                 #high = "black",na.value="transparent",name="Land cover change (%)",guide = FALSE)+
-            # geom_sf(data = world_coast)+
-            # ggtitle("+1C")+
-            # theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
-
-            # c <- ggplot() +
-            # theme_bw() +
-            # geom_sf(data = pft_sum_poly_rob2,aes(fill = 100*layer), color = NA) +
-            # scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", oob = scales::squish)+
-            # geom_sf(data = world_coast)+
-            # ggtitle("+1.5C")+
-            # theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
             
             d_area <- ggplot() +
             theme_void() +
             geom_sf(data = pft_sum_poly_rob4,aes(fill = 10000*layer), color = NA) +
             geom_sf(data = world_coast)+
-            #scale_fill_gradient2(midpoint=0, low ="red" , mid = "white",high = "green",na.value="transparent",name="Land cover change (%)")+
             scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", labels=c("<-10","-05","0","05",">10"),oob = scales::squish)+
-            #scale_fill_distiller(palette = "Spectral", direction = 1,name="Land cover change (%)")+
-            #scale_fill_npg()+
             geom_sf(data = world_coast)+
             ggtitle("+2C")+
             theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
@@ -811,8 +695,6 @@
             theme_void() +
             geom_sf(data = pft_sum_poly_rob2,aes(fill =100* layer), color = NA) +
             scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", oob = scales::squish)+
-            #scale_fill_gradient2(midpoint=50, low ="#ffffbf" , mid = "red",
-             #               high = "black",na.value="transparent",name="Land cover change (%)",guide = FALSE)+
             geom_sf(data = world_coast)+
             ggtitle("+1.5C")+
             theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
@@ -830,15 +712,10 @@
         class(pft_file_names)
         length(pft_file_names)
         pft_file_names <- discard_pattern(pft_file_names,c("rcp60soc"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("c3"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("c4"))
         pft_file_names <- discard_pattern(pft_file_names,c("rcp26soc"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("lpj"))
         pft_file_names <- keep_pattern(pft_file_names,c("dif"))
         pft_file_names <- keep_pattern(pft_file_names,c("orc"))
-        #pft_file_names <- discard_pattern(pft_file_names,c("orc"))
         temp_levels <- c(2)
-        #temp_levels <- c(0.5)
         for (temp_levels_i in 1:length(temp_levels)){
         first <- 1
         temp_level <- temp_levels[temp_levels_i]
@@ -858,12 +735,7 @@
             temp <- df_tas[which(df_tas$scen==clim_scen[scen_i] & df_tas$gcm_model==clim_models[clim_i]),]
 
            
-            # if(temp$dif_t[which.max(temp$dif_t-temp_level)]<0){
-            #     decade_i <- which.max(temp$dif_t-temp_level)
-            # } else{
-            #     which.min((abs(temp$dif_t-temp_level)))
-
-            # }
+            
 
             decade_i <- which.min((abs(temp$dif_t-temp_level)))
 
@@ -872,7 +744,6 @@
             next
             }
             
-            #decade_i <- which(abs(temp$dif_t-temp_level)<0.2)
             if(identical(decade_i, integer(0))){
                     print(paste("identical next",i))
                     next
@@ -906,10 +777,6 @@
         }
 
 
-            #crs(pft_sum_rcp26) <- "+init=EPSG:4326"
-            #pft_sum_rcp26<- projectRaster(pft_sum_rcp26, crs='+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
-            
-            
        
 
             cveg_sum_poly_rob4 <- 
@@ -925,8 +792,6 @@
             scale_fill_gradientn(colours = pal,limits=c(-40,40),
             na.value="transparent",name="", labels=c("<-40","-20","0","20",">40"),
             oob = scales::squish)+
-            #scale_fill_distiller(palette = "Spectral", direction = 1,name="Land cover change (%)")+
-            #scale_fill_npg()+
             geom_sf(data = world_coast)+
             ggtitle("+2C")+
             theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
@@ -939,8 +804,6 @@
             theme_void() +
             geom_sf(data = pft_sum_poly_rob2,aes(fill =100* layer), color = NA) +
             scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", oob = scales::squish)+
-            #scale_fill_gradient2(midpoint=50, low ="#ffffbf" , mid = "red",
-             #               high = "black",na.value="transparent",name="Land cover change (%)",guide = FALSE)+
             geom_sf(data = world_coast)+
             ggtitle("+1.5C")+
             theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) 
@@ -1002,12 +865,7 @@
 
 
 
-                                # if (abs(temp$dif_t[decade_i]-temp_level) > 0.1){
-                                #     print(paste("next",i))
-                                #     next
-                                # }
                                 
-                                # decade_i <- which(abs(temp$dif_t-temp_level)<0.1)
                                 if(p==1){
                                     a <- as.data.frame(subset(v1,decade_i), xy=TRUE)
                                     names(a)[3] <- "Percent"
@@ -1055,16 +913,12 @@
 
         a_h_car <- a_h
         a_h <- bind_rows(a_h,a_h_car)
-        save(a_h,file="Data/a_h_3dgvms.Rda")
+        #save(a_h,file="Data/a_h_3dgvms.Rda")
 
         
         load("Data/a_h.Rda")
 
-        levels(factor(a_h$horizon))
-        levels(factor(a_h$DGVM))
-
-
-
+       
 
         sw <- as_Spatial(st_cast(world))
         raster_isos <- raster::rasterize(sw[1],v1)
@@ -1173,10 +1027,7 @@
             theme(plot.title = element_text(hjust = 0.5)) + 
             ylab("Cover change (pp)") +
             scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
-            #scale_fill_brewer(palette = "Paired") +
-            #ylim(-30,30)+ 
             guides(fill=guide_legend(title="Biome"))+
-            #geom_smooth(aes(x=y2C,y=Future_Change*100*10),se=F,color="black") + 
             coord_flip()
 
             
@@ -1311,8 +1162,7 @@
         "brsutewmt","brsutewms","brevtewms","ndevstdit","ndsustswt","brevstdit","brevdttht",
         "c4h","brevxs","sds","ndevtedtt","ndevtedttht","brevdtt",
         "brrgtrt","brevtrt","trs"))
-        #levels(a_car_2005soc_present$PFT) <-  a_car_2005soc_present$PFT
-
+        
         # Bare soil (bare); tropical broad-leaved evergreen (trbrev); tropical broad-leaved raingreen (trbrrg); 
         #temperate needleleaf evergreen (tendev); temperate broad-leaved evergreen (tebrev); temperate broad-leaved summergreen (tebrsu); 
         #boreal needleleaf evergreen (bondev); boreal broad-leaved summergreen (bobrsu); boreal needleleaf summergreen (bondsu); C3 natural grass (c3gra); 
@@ -1381,10 +1231,7 @@
             theme(plot.title = element_text(hjust = 0.5)) + 
             ylab("Cover change (pp)") +
             scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
-            #scale_fill_brewer(palette = "Paired") +
-            #ylim(-30,30)+ 
             guides(fill=guide_legend(title="Biome"))+
-            #geom_smooth(aes(x=y2C,y=Future_Change*100*10),se=F,color="black") + 
             coord_flip()
 
             
@@ -1408,7 +1255,6 @@
         first_time_areacalc3 <- 0
         listoffiles <- list.files("Data/PFT_rasters/")
         counter <- 1
-        #a <- as.data.frame(matrix(NA, nrow = (59199*220*11 + 80*75438*10), ncol = 13))
         
         for (dgvmsi in 1:3){
             if(dgvmsi ==2 & first_time_areacalc2 == 0){
@@ -1489,12 +1335,6 @@
 
 
 
-                                # if (abs(temp$dif_t[decade_i]-temp_level) > 0.1){
-                                #     print(paste("next",i))
-                                #     next
-                                # }
-                                
-                                # decade_i <- which(abs(temp$dif_t-temp_level)<0.1)
                                 if(first==1){
                                     a <- as.data.frame(subset(v1,decade_i), xy=TRUE)
                                     names(a)[3] <- "Percent"
@@ -1534,13 +1374,7 @@
                                     b <- b[which(!is.nan(b$Percent)),]
                                     a <- bind_rows(a,b)
                                     print(counter)
-                                    #print(dim(b)[2])
-                                    # if(dgvmsi==1){
-                                    #     a[(1+59199*(counter-1)):(59199*(counter)),] <- b
-
-                                    # }else{
-                                    #     a[(59199*220*11+1+75438*(counter-1)):(59199*220*11+75438*(counter)),] <- b
-                                    # }
+                                    
                                     
                                     counter <- counter +1
                                 }
@@ -1549,15 +1383,7 @@
 
 
                     
-                            #if(skip_next==1){next}
-                            #cell_max <- aggregate(Percent~IDcell, data=a, FUN="max")
-                            #names(cell_max)[2] <- "maxpercent"
-                            #a2 <- merge(a,cell_max,by="IDcell",all=TRUE)
-                            #cell_max <- data.frame(IDcell=a2$IDcell[which(a2$Percent==a2$maxpercent)],dominant_pft=a2$PFT[which(a2$Percent==a2$maxpercent)])
-                            #cell_max <- cell_max[which(cell_max$IDcell %notin% cell_max$IDcell[duplicated(cell_max$IDcell)]),]
-                            #a <- merge(a,cell_max,by="IDcell",all.x=TRUE)
                             
-                            #a$ID <- seq(1:dim(a)[1])
                             
                         }
                     }
@@ -1571,114 +1397,50 @@
 
         # Read Database
             
-            es_ac_notFood <- read.csv("es_ac_notFood_id.csv")
+            es_ac_notFood <- read.csv("es_ac_notFood_id_05222023.csv")
             dat<- es_ac_notFood
             glimpse(dat)
-            levels(factor(dat$Ecosystem.Service.Category))
-            #spatial extents are not standardized units - convert Hectares to Acres
-            dat$Spatial.Extent[which(dat$Spatial.Unit.Published=="Hectares")]<-dat$Spatial.Extent[which(dat$Spatial.Unit.Published=="Hectares")]*2.471
-            #limit to observations with spatial extent in either acres or hectares (now converted to acres)
-            dat<- dat[which(dat$Spatial.Unit.Published%in% c("Acres","Hectares")),]
-            
-            # a1=ggplot(dat,aes(x=log(Spatial.Extent),y=log(Single.Value.Converted)))+geom_point()
-            # a1=a1+geom_smooth(method="lm") + theme_bw()
-
-            # x11()
-            # a1
-            # #dat$Category=ifelse(dat$Ecosystem.Service.Category=="Provisioning","Provisioning","Non-Provisioning")
-            # b=ggplot(dat,aes(x=log(Spatial.Extent),y=log(Single.Value.Converted),col=Category))+geom_point()
-            # b=b+geom_smooth(method="lm")
-            # b+theme_bw()+xlab("Log Spatial extent") + ylab("Log value of benefits ($/ha)")
-            # b
-            # #look at linear model controlling for GDP
-            # mod=lm(log(Single.Value.Converted)~log(Spatial.Extent)*Category+log(gdp_pc),data=dat%>%filter(Single.Value.Converted>0&Spatial.Extent>0&gdp_pc>0))
-            # elasticity_area <- summary(mod)$coefficients[2]
-            # summary(mod)
-            # # library("stargazer")
-            # stargazer(mod,type="html",out="value-area.html")
-
-            #mod=lm(log(Single.Value.Converted)~log(cveg_perarea)+log(gdp_pc),data=dat%>%filter(Single.Value.Converted>0&Spatial.Extent>0&gdp_pc>0&Category=="Non-Provisioning"))
-         
-          
-            dat$cveg <- (dat$cveg_total + dat$cveg_total_car + dat$cveg_total_orc)/3
-            dat$pct_covered_mean <- (dat$pct_covered + dat$pct_covered_car + dat$pct_covered_orc)/3
+            hist(dat$logGDP)
             dat$cveg_perarea <- dat$cveg/dat$Spatial.Extent
-
-            #   #summary(mod)
-            # ggplot(dat)+
-            # geom_point(aes(y=log(Single.Value.Converted),x=cveg_total),color="blue")+
-            # geom_point(aes(y=log(Single.Value.Converted),x=cveg_total_car),color="red")+
-            # geom_point(aes(y=log(Single.Value.Converted),x=cveg_total_orc),color="cyan")+
-            # geom_point(aes(y=log(Single.Value.Converted),x=cveg),color="black",alpha=0.3)+geom_smooth(aes(y=log(Single.Value.Converted),x=cveg_total),method="lm")
-
             
-            ggplot(dat)+geom_point(aes(y=log(Single.Value.Converted),x=log(cveg)),color="black",alpha=0.3)+
-            geom_smooth(aes(y=log(Single.Value.Converted),x=log(cveg)),method="lm")
-           
-            # c1 <- hist(dat$cveg_total)
-            # c2 <- hist(dat$cveg_total_car,add=TRUE)
-            # c3 <- hist(dat$cveg_total_orc)
-            # ggarrange(c1,c2,c3)
-
+            dat$Cat2 <- factor(dat$Cat2)
+            dat <- within(dat, Cat2 <- relevel(Cat2, ref = "nonmarket"))
+            modcveg=felm(log(Single.Value.Converted)~log(cveg)*Cat2+
+                log(EcosystemArea)*Cat2+log(pct_covered_mean)+
+                log(gdp_pc)*Cat2|Country+Valuation.Methodology|0|0,
+                data=dat%>%filter(Single.Value.Converted>0&EcosystemArea>0&gdp_pc>0))
             
-            max(dat$cveg,na.rm=TRUE)/min(dat$cveg,na.rm=TRUE)
-            dat$area_covered <- dat$pct_covered_mean * dat$Spatial.Extent
-            # modcveg=lm(log(Single.Value.Converted)~log(cveg)*Category+log(area_covered)*Category+log(gdp_pc),data=dat%>%filter(Single.Value.Converted>0&Spatial.Extent>0&gdp_pc>0))
-            # summary(modcveg)
-            # elasticity_area_prov <- 0
-            # elasticity_area_nonprov <- summary(modcveg)$coefficients[4]
-            # elasticity_cveg_prov <- 0
-            # elasticity_cveg_nonprov <- summary(modcveg)$coefficients[2]
-
-
-            glimpse(dat)
-            table(dat$Ecosystem.Service.Category)
-            dat$Cat2 <- dat$Category
-            dat$Cat2[dat$Cat2=="services"] <- "nonmarket"
-            dat$Cat2[dat$Cat2=="nonuse"] <- "nonmarket"
-           
-            
-            
-            modcveg=lm(log(Single.Value.Converted)~log(cveg)*Cat2+log(Spatial.Extent)*Cat2+log(pct_covered_mean)+log(gdp_pc),data=dat%>%filter(Single.Value.Converted>0&Spatial.Extent>0&gdp_pc>0))
             summary(modcveg)
+            stargazer(modcveg,type="text")
 
             elasticity_area_market <- 0
-            elasticity_area_non_use <- summary(modcveg)$coefficients[4]
+            elasticity_area_non_use <- summary(modcveg)$coefficients[3]
+            elasticity_area_nonprov <- summary(modcveg)$coefficients[3]
             elasticity_cveg_market <- 0
-            elasticity_cveg_non_use <-  summary(modcveg)$coefficients[2]
-            dat_c <- dat%>%filter(Single.Value.Converted>0&Spatial.Extent>0&gdp_pc>0&Cat2=="nonmarket")
-            dat_c <- dat_c[order(dat_c$Single.Value.Converted),]
-            
-            dat_c$ES_percinc <- dat_c$Single.Value.Converted/dat_c$Single.Value.Converted[1]
-            
-            dat_c <- dat_c[order(dat_c$cveg),]
-            dat_c$cveg_percinc <- dat_c$cveg/dat_c$cveg[1]
+            elasticity_cveg_non_use <-  summary(modcveg)$coefficients[1]
+            elasticity_cveg_nonprov <-  summary(modcveg)$coefficients[1]
 
-            
-            dat_c <- dat_c[order(dat_c$Spatial.Extent),]
-            dat_c$area_percinc <- dat_c$Spatial.Extent/dat_c$Spatial.Extent[1]
 
-            dat_c <- dat_c[which(dat_c$ES_percinc<quantile(dat_c$ES_percinc,0.95)),]
-            
-            
-            elastcap_cveg <-ggplot(dat_c,aes(x=(cveg_percinc),y=(ES_percinc)))+geom_point()+geom_smooth(method="loess")+theme_bw()+
-            geom_vline(aes(xintercept=40),linetype="dashed")+
-            xlab("Percent increase in vegetation carbon")+
-            ylab("Percent increase in ecosystem benefits value")+
-            annotate("text", x=37, y=15000000, label="40% Increase", angle=90,size=5)
-            elastcap_cveg
-            ggsave("Figures/Cveg_Cap.png",dpi=400)
+            library(ggplot2)
 
-            elastcap_area <- ggplot(dat_c,aes(x=(area_percinc),y=(ES_percinc)))+geom_point()+geom_smooth(method="loess")+theme_bw()+
-            #geom_vline(aes(xintercept=40),linetype="dashed")+
-            xlab("Percent increase in Area")+
-            ylab("Percent increase in ecosystem benefits value")+scale_x_continuous(trans = 'log')#+scale_y_continuous(trans = 'log')
-            #annotate("text", x=33, y=15000000, label="40% Increase", angle=90,size=5)
-            ggsave("Figures/Area_Cap.png",dpi=400)
+            # Create scatter plot with regression line
+            elas_cveg <- ggplot(dat[which(dat$Cat2=="nonmarket" ),], aes(x = log(cveg), y = log(Single.Value.Converted))) +
+            geom_point() +
+            geom_smooth(method = "lm", color = "blue") +
+            theme_bw()+
+            xlab("Log vegetation carbon (kg/m2)") +
+            ylab("Log value per hectare ($/ha)")
 
-            ggarrange(elastcap_area,elastcap_cveg,nrow=1,ncol=2)
-             ggsave("Figures/AreaCveg_Cap.png",dpi=400)
+            elas_area <- ggplot(dat[which(dat$Cat2=="nonmarket"& dat$Spatial.Extent>0),], aes(x = log(Spatial.Extent), y = log(Single.Value.Converted))) +
+            geom_point() +
+            geom_smooth(method = "lm", color = "blue") +
+            theme_bw() +
+            xlab("Log area (ha)") +
+            ylab("Log value per hectare ($/ha)")
 
+            ggarrange(elas_area,elas_cveg)
+            #ggsave("Figures/Final Figures/Submission 3/elas_cveg_area.png",dpi=600)
+           
 
 
         # Read Database
@@ -1708,8 +1470,8 @@
                      
             first <- 1
             first_rf <- 1
-            
             for(j in 1:177){
+            #for(j in 109){
             
                 #for(typeESi in 1:3){
                     for (dgvmsi in 1:3){
@@ -1721,7 +1483,7 @@
                             print(paste("No World Bank Data for",isos[j]))
                             next
                                 }
-                                
+                        gdp_country_j <- log(wealth2018$GDP[which(wealth2018$country==isos[j])]/wealth2018$Population[which(wealth2018$country==isos[j])])        
 
                         if(dgvms[dgvmsi]=="lpj"){
                             PFT_movement <- PFT_movement_lpj
@@ -1740,110 +1502,12 @@
                        
 
 
-                        # if (dgvmsi ==1){
-                        #     levels(PFT_movement$PFT) <- c("Boreal evergreen \n needleleaved (shade-intolerant)",
-                        #     "Boreal evergreen \n needleleaved",
-                        #     "Boreal summergreen \n needleleaved",
-                        #     "Boreal/Temperate grass",
-                        #     "Tropical Grass",
-                        #     "Boreal/Temperate \n broadleaved (shade-intolerant)" ,
-                        #     "Temperate  broadleaved \n  evergreen",
-                        #     "Temperate broadleaved \n summergreen",
-                        #     "Tropical broadleaved \n  evergreen" ,
-                        #     "Tropical broadleaved \n  raingreen" ,
-                        #     "Tropical broadleaved \n  evergreen (shade-intolerant)")
-                        # }else {
-                        #         levels(PFT_movement$PFT) <- c("Boreal summergreen \n broadleleaved",
-                        #         "Boreal evergreen \n needleleaved",
-                        #         "Boreal summergreen \n needleleaved",
-                        #         "Boreal/Temperate grass" ,"Tropical Grass",
-                        #         "Temperate  broadleaved \n  evergreen","Temperate broadleaved \n summergreen",   
-                        #         "Temperate needleleaved \n  evergreen", "Tropical broadleaved \n  evergreen", "Tropical broadleaved \n raingreen")
-
-                        # }
-                            #erase_clim <- clim_models[clim_models %notin% clim_models[climi]]
-                            #wealth2018_pft <- wealth2018_pft_all
-                            
-                            
-                            
                             PFT_movement_c <- PFT_movement[which(PFT_movement$countrycode==isos[j]),]
                             PFT_movement_c_present <- PFT_movement_c[which(PFT_movement_c$decade==2020),]
 
                             levels_clim <- levels(factor(PFT_movement_c_present$clim))
                             #levels(factor(PFT_movement_c_present$soc))
                             levels_scen <- levels(factor(PFT_movement_c_present$scen))
-
-                            # PFT_movement_c_present <- PFT_movement_c[which(PFT_movement_c_run$decade==2020),]
-                            # areasPFT_present <- aggregate(PFT_area ~ PFT +PFT_code, data = PFT_movement_c_present, FUN = sum)
-                            # condition_to_match <-areasPFT_present$PFT_code[which(areasPFT_present$PFT_area==max(areasPFT_present$PFT_area))]
-
-                            # ps <- as.character(areasPFT_present$PFT_code[which(areasPFT_present$PFT_area>0)])
-                            # if(length(ps)==0){
-                            #     print("no present area")
-                            #     next
-                            # }
-
-                            # ps <- paste0("PFT.",ps)
-                            # ps_all <- paste(c(ps,extra_ind_vars),collapse="+")
-
-
-                            # subset_es <-es_ac_notFood[which((eval(parse(text=paste("es_ac_notFood$PFT.",condition_to_match,sep="")))>0) & 
-                            # es_ac_notFood$Ecosystem.Service.Category %in% "Provisioning"),]
-
-                            # subset_es_np <-es_ac_notFood[which((eval(parse(text=paste("es_ac_notFood$PFT.",condition_to_match,sep="")))>0) & 
-                            # es_ac_notFood$Ecosystem.Service.Category %in% c("Information" ,"Regulating"  , "Supporting")),]
-
-
-                            # ind_vars <- subset_es[,names(subset_es)%in%c(ps,extra_ind_vars)]
-                            # ind_vars_np <- subset_es_np[,names(subset_es_np)%in%c(ps,extra_ind_vars)]
-                            # if(dim(ind_vars)[1]<6){
-                            #     print(paste("Not enough observations in dataset for",isos[j]))
-                            #     next
-                            # }
-                            # zer_ind <- lapply(ind_vars, function(x) all(x == 0))
-                            # zeropfts <- names(unlist(zer_ind))[unlist(zer_ind)]
-                            # trf <- tuneRF(ind_vars, subset_es$logESValue, trace=FALSE,plot=FALSE)
-                            # trf_np <- tuneRF(ind_vars_np, subset_es_np$logESValue, trace=FALSE,plot=FALSE)
-                        
-                            
-                            # mt <- trf[which.min(trf[,2]), 1]
-                            # mt_np <- trf_np[which.min(trf_np[,2]), 1]
-                            
-                            # ntrees=200
-                            
-                            # Results_rf <- randomForest(ind_vars, subset_es$logESValue, importance = TRUE,tree = TRUE, mtry =mt, ntree = ntrees)
-                            
-                            
-                            
-                            # Results_rf_np <- randomForest(ind_vars_np, subset_es_np$logESValue, importance = TRUE,tree = TRUE, mtry =mt_np, ntree = ntrees)
-                            # RF_rmse_run <- data.frame(rbind(data.frame(ntrees=seq(1:ntrees),mse=Results_rf$mse,type="Market"),data.frame(ntrees=seq(1:ntrees),mse=Results_rf_np$mse,type="Nonmarket")))
-                            
-
-
-
-                            # if(first_rf==1){
-                                
-                            #             RF_rmse <- RF_rmse_run
-                            #             first_rf=0
-                            # }else{
-                                
-                            #             RF_rmse <- bind_rows(RF_rmse,RF_rmse_run)
-
-                            # }
-
-
-                            #glimpse(es_ac_notFood)
-                        
-                            # if(dim(subset_es)[1] < 5){
-                            #     print("subset less than 5 observations")
-                            #     next
-                            # }
-
-                            # if(dim(subset_es_np)[1] < 5){
-                            #     print("subset less than 5 observations")
-                            #     next
-                            # }
-                                    
 
                             for (climi in 1:length(levels_clim)){
                                 for (sceni in 1:length(levels_scen)){
@@ -1859,13 +1523,8 @@
                                     condition_to_match <-areasPFT_present$PFT_code[which(areasPFT_present$PFT_area==max(areasPFT_present$PFT_area))]
 
                                     areasPFT_present_prov <- aggregate(PFT_area ~ PFT +PFT_code, data = PFT_movement_c_run_present, FUN = sum)
-                                    #areasPFT_present_prov <- areasPFT_present_prov[-which(areasPFT_present_prov$PFT %in% c("c3g","c4g","c3gra","c4gra","c3hh","c3dh","c4h")),]
                                     condition_to_match_prov <-areasPFT_present_prov$PFT_code[which(areasPFT_present_prov$PFT_area==max(areasPFT_present_prov$PFT_area))]
-
-
-
-
-                                    
+                                   
                                     ps <- as.character(areasPFT_present$PFT_code[which(areasPFT_present$PFT_area>0)])
                                     ps_prov <- as.character(areasPFT_present_prov$PFT_code[which(areasPFT_present_prov$PFT_area>0)])
                                     if(length(ps)==0){
@@ -1885,6 +1544,7 @@
                                     input_var_model <- c(pft_pct_pred_dgvm[,2],log(wealth2018$GDP[which(wealth2018$country==isos[j])]),sum(pft_pct_pred_dgvm[,2]))
 
                                     subset_es <-es_ac_notFood[which(es_ac_notFood$Ecosystem.Service.Category %in% "Provisioning"),]
+                                    dim(subset_es)
                                     
                                     dep_var <- subset_es[,names(subset_es)%in%c("logESValue")]
 
@@ -1899,9 +1559,8 @@
 
                                         }
                                     }
-
-                                    ind_vars <-ind_vars[euclidian_distance_prov$obs[order(euclidian_distance_prov$dist)][1:100],]
-                                    dep_var <- dep_var[euclidian_distance_prov$obs[order(euclidian_distance_prov$dist)][1:100]]
+                                    ind_vars <-ind_vars[euclidian_distance_prov$obs[order(euclidian_distance_prov$dist)][1:31],]
+                                    dep_var <- dep_var[euclidian_distance_prov$obs[order(euclidian_distance_prov$dist)][1:31]]
                                     complete <- complete.cases(ind_vars)
                                     ind_vars<-ind_vars[complete,]
                                     dep_var <- dep_var[complete]
@@ -1923,54 +1582,15 @@
 
                                         }
                                     }
+                                    #glimpse(ind_vars_np)
 
-                                    ind_vars_np <-ind_vars_np[euclidian_distance_np$obs[order(euclidian_distance_np$dist)][1:300],]
+                                    ind_vars_np <-ind_vars_np[euclidian_distance_np$obs[order(euclidian_distance_np$dist)][1:155],]
                                     
-                                    dep_var_np <- dep_var_np[euclidian_distance_np$obs[order(euclidian_distance_np$dist)]][1:300]
-                                    # glimpse(ind_vars_np)
-                                    # glimpse(dep_var_np)
+                                    dep_var_np <- dep_var_np[euclidian_distance_np$obs[order(euclidian_distance_np$dist)]][1:155]
                                     complete <- complete.cases(ind_vars_np)
                                     ind_vars_np<-ind_vars_np[complete,]
                                     dep_var_np<-dep_var_np[complete]
-
-
-
-
-
-
-                                    # subset_es <-es_ac_notFood[which((eval(parse(text=paste("es_ac_notFood$PFT.",condition_to_match_prov,sep="")))>0) & 
-                                    # es_ac_notFood$Ecosystem.Service.Category %in% "Provisioning"),]
-
-                                    
-
-                                    # subset_es_np <-es_ac_notFood[which((eval(parse(text=paste("es_ac_notFood$PFT.",condition_to_match,sep="")))>0) & 
-                                    # es_ac_notFood$Ecosystem.Service.Category %in% c("Information" ,"Regulating"  , "Supporting")),]
-
-
-                                    # #glimpse(es_ac_notFood)
-                                
-                                    # if(dim(subset_es)[1] < 5){
-                                    #     print("subset less than 5 observations")
-                                    #     next
-                                    # }
-
-                                    # if(dim(subset_es_np)[1] < 5){
-                                    #     print("subset less than 5 observations")
-                                    #     next
-                                    # }
-                                
-                                    # if(length(ps)==1){
-                                    #    print("Only one PFT")
-                                    #    next
-                                    # }
-
-                                    #ind_vars_np <- subset_es_np[,names(subset_es_np)%in%c(ps,extra_ind_vars)]
-                                    # if(dim(ind_vars)[1]<6){
-                                    #     print(paste("Not enough observations in dataset for",isos[j]))
-                                    #     next
-                                    # }
-                                    # #zer_ind <- lapply(ind_vars, function(x) all(x == 0))
-                                    #zeropfts <- names(unlist(zer_ind))[unlist(zer_ind)]
+                                    #library(randomForest)
                                     trf <- tuneRF(ind_vars, dep_var, trace=FALSE,plot=FALSE)
                                     trf_np <- tuneRF(ind_vars_np, dep_var_np, trace=FALSE,plot=FALSE)
                                 
@@ -1978,22 +1598,11 @@
                                     mt <- trf[which.min(trf[,2]), 1]
                                     mt_np <- trf_np[which.min(trf_np[,2]), 1]
                                     
-                                    Results_rf <- randomForest(ind_vars, dep_var, importance = TRUE,tree = TRUE, mtry =mt, ntree = 200)
+                                    Results_rf <- randomForest(ind_vars, dep_var, importance = TRUE,tree = TRUE, mtry =mt, ntree = 500)
                                     
                                     
                                     
-                                    Results_rf_np <- randomForest(ind_vars_np, dep_var_np, importance = TRUE,tree = TRUE, mtry =mt_np, ntree = 200)
-                                    
-                                    #pft_pct_pred = aggregate(Percent  ~ horizon + PFT_code, data = PFT_movement2, FUN = "mean")
-                                    #pft_pct_pred_dgvm <- pft_pct_pred[which(pft_pct_pred$horizon=="Present"),which(names(pft_pct_pred)%in% c("PFT_code","Percent"))]
-                                    # pft_pct_pred_dgvm <- aggregate(Percent ~ PFT_code, data = PFT_movement_c_run_present, FUN = "mean")
-                                    # pft_pct_pred_dgvm <- pft_pct_pred_dgvm[which(paste0("PFT.",pft_pct_pred_dgvm$PFT_code) %in% names(ind_vars)),]
-                                    # pft_pct_pred_dgvm$PFT_code<-paste0("PFT.",pft_pct_pred_dgvm$PFT_code)
-                                    # pft_pct_pred_dgvm<-pft_pct_pred_dgvm[order(names(ind_vars)[1:(length(ind_vars)-2)]),]
-
-                                    # input_var_model <- c(pft_pct_pred_dgvm[,2],log(wealth2018$GDP[which(wealth2018$country==isos[j])]),sum(pft_pct_pred_dgvm[,2]))
-                                    
-
+                                    Results_rf_np <- randomForest(ind_vars_np, dep_var_np, importance = TRUE,tree = TRUE, mtry =mt_np, ntree = 500)
                                     
                                     pft_pct_pred_database <- colMeans(ind_vars)
                                     
@@ -2005,6 +1614,14 @@
                                         eff_pred <- pft_pct_pred_database
                                         eff_pred[n] <- eff_pred[n]+0.1
                                         eff_pft[n,2] <- exp(predict(Results_rf,eff_pred))
+                                        
+                                        eff_pft[n,2] <- exp(predict(Results_rf_mono,data.frame(t(eff_pred))))
+                                        
+                                        ordered_dataframe <- pft_pct_pred_dgvm[match(names(pft_pct_pred_database[1:(length(pft_pct_pred_database)-2)]), pft_pct_pred_dgvm$PFT_code), ]
+                                        pred_countrydata <- c(ordered_dataframe[,2],sum(ordered_dataframe[,2]),gdp_country_j)
+                                        pred_countrydata[n] <- pred_countrydata[n]+0.1
+                                        eff_pft[n,2] <- exp(predict(Results_rf,pred_countrydata))
+                                        
                                     }
 
                                     eff_pft$importance <- eff_pft[,2]/max(eff_pft[,2])
@@ -2021,78 +1638,40 @@
                                         eff_pred[n] <- eff_pred[n]+0.1
                                         eff_pft_np[n,2] <- exp(predict(Results_rf_np,eff_pred))
 
+                                        ordered_dataframe <- pft_pct_pred_dgvm[match(names(pft_pct_pred_database[1:(length(pft_pct_pred_database)-2)]), pft_pct_pred_dgvm$PFT_code), ]
+                                        pred_countrydata <- c(ordered_dataframe[,2],sum(ordered_dataframe[,2]),gdp_country_j)
+                                        pred_countrydata[n] <- pred_countrydata[n]+0.1
+                                        eff_pft_np[n,2] <- exp(predict(Results_rf_np,pred_countrydata))
+
                                     }
 
                                     eff_pft_np$importance_np <- eff_pft_np[,2]/max(eff_pft_np[,2])
-
-                                    #pft_pct_pred_dgvm <- aggregate(Percent ~ PFT_code, data = PFT_movement_c_run_present, FUN = "mean")
-                                    #pft_pct_pred_dgvm <- pft_pct_pred_dgvm[pft_pct_pred_dgvm$Percent>0,]
-                                    #input_var_model <- c(pft_pct_pred_dgvm[,2],log(wealth2018$GDP[which(wealth2018$country==isos[j])]),sum(pft_pct_pred_dgvm[,2]))
-                                    #pft_pct_pred_database <- colMeans(ind_vars)
-                                    # pft_pct_pred_dgvm <- aggregate(Percent ~ PFT_code, data = PFT_movement_c_run_present, FUN = "mean")
-                                    # pft_pct_pred_dgvm <- pft_pct_pred_dgvm[which(paste0("PFT.",pft_pct_pred_dgvm$PFT_code) %in% names(ind_vars_np)),]
-                                    # pft_pct_pred_dgvm$PFT_code<-paste0("PFT.",pft_pct_pred_dgvm$PFT_code)
-                                    # pft_pct_pred_dgvm<-pft_pct_pred_dgvm[order(names(ind_vars_np)[1:(length(ind_vars_np)-2)]),]
-
-                                    # input_var_model <- c(pft_pct_pred_dgvm[,2],log(wealth2018$GDP[which(wealth2018$country==isos[j])]),sum(pft_pct_pred_dgvm[,2]))
-                                    
-                                    # pft_pct_pred_database <- colMeans(ind_vars_np)
-                                    
-                                    # eff_pft_np <- data.frame(matrix(NA, nrow =(length(input_var_model)[1]-2), ncol = 2))
-                                    # names(eff_pft_np) <- c("variable","percent")
-                                    # eff_pft_np[,1] <- names(pft_pct_pred_database)[1:(length(pft_pct_pred_database)-2)]
-                                    
-                                    # for(n in 1:(length(pft_pct_pred_database)-length(extra_ind_vars))){
-                                    #     eff_pred_np <- input_var_model
-                                    #     eff_pred_np[n] <- eff_pred_np[n]+0.1
-                                    #     eff_pft_np[n,2] <- predict(Results_rf_np,eff_pred_np)
-                                    # }
-
-                                    # eff_pft_np$importance_np <- eff_pft_np[,2]/max(eff_pft_np[,2])
-
-
-
-
                                     # Get relative contribution
                                     NK_ForestT <- wealth2018$NforestT[which(wealth2018$country==isos[j])]
                                     NK_ForestES <- wealth2018$NforestES[which(wealth2018$country==isos[j])]
                                     NK_Npa <- wealth2018$Npa[which(wealth2018$country==isos[j])]
                                     pft_area_model <- aggregate(PFT_area ~ PFT_code, data = PFT_movement_c_run_present, FUN = sum)
                                     
-                                    aggregate(area ~ temp+PFT_code, data = PFT_movement_c_run_present, FUN = sum)
-                                    aggregate(PFT_area ~ temp, data = PFT_movement_c_run_present, FUN = sum)
-                                    aggregate(Percent ~ temp+PFT_code, data = PFT_movement_c_run_present, FUN = max)
-                                    max(PFT_movement_c_run_present$Percent)
                                     pft_area_model <-pft_area_model[which(paste0("PFT.",pft_area_model$PFT_code) %in% names(ind_vars)),]
-                                    #pft_area_model <- pft_area_model[which(pft_area_model$PFT_area>0),]
-
+                                    
                                     eff_pft <- eff_pft[order(eff_pft$variable,paste0("PFT.",pft_area_model$PFT_code)),]
                                     eff_pft$areas <- pft_area_model$PFT_area
                                     eff_pft$relative_contribution <- (eff_pft$areas * eff_pft$importance) / sum(eff_pft$areas * eff_pft$importance)
                                     eff_pft$es_val_per_area <- eff_pft$relative_contribution * NK_ForestT * 0.03 / sum(eff_pft$areas)
-
-                                    #log(eff_pft$es_val_per_area)
-                                    #sum(eff_pft$relative_contribution)
                                     
                                     pft_area_model <- aggregate(PFT_area ~ PFT_code, data = PFT_movement_c_run_present, FUN = sum)
                                     pft_area_model <-pft_area_model[which(paste0("PFT.",pft_area_model$PFT_code) %in% names(ind_vars_np)),]
-                                     eff_pft_np <-  eff_pft_np[order( eff_pft_np$variable,paste0("PFT.",pft_area_model$PFT_code)),]
+                                    eff_pft_np <-  eff_pft_np[order( eff_pft_np$variable,paste0("PFT.",pft_area_model$PFT_code)),]
                                      eff_pft_np$areas <- pft_area_model$PFT_area
-                                    #eff_pft$areas <- pft_area_model$PFT_area
                                     eff_pft_np$relative_contribution_np <- (eff_pft_np$areas * eff_pft_np$importance_np) / sum(eff_pft_np$areas * eff_pft_np$importance_np)
                                     eff_pft_np$es_val_per_area_np <- eff_pft_np$relative_contribution_np * (NK_ForestES+NK_Npa) * 0.03 / sum(eff_pft_np$areas)
 
-                                    #+ 0.01*PFT_ES$ES_rel*PFT_ES$areas_change_pct_adjusted * elasticity_area
-
-
                                     Future_areas <- aggregate(PFT_area ~ PFT_code + temp, data = PFT_movement_c_run, FUN = "sum")
-                                    #Future_cveg <- aggregate(cveg ~ PFT_code + temp, data = PFT_movement_c_run, FUN = "sum")
                                     Future_cveg <- aggregate(cveg ~ PFT_code + temp, data = PFT_movement_c_run, FUN = "mean")
                                     Future_areas$variable <- paste0("PFT.",Future_areas$PFT_code)
                                     Future_cveg$variable <- paste0("PFT.",Future_cveg$PFT_code)
                                     Future_areas <- merge(Future_areas,eff_pft,by="variable")
                                     Future_areas <- merge(Future_areas,Future_cveg[,3:4],by="variable")
-                                    #glimpse(Future_areas)
                                     
                                     Future_areas$NK_Provisioning <- Future_areas$es_val_per_area * Future_areas$PFT_area / 0.03
                                     Future_areas_prov <- Future_areas
@@ -2103,14 +1682,16 @@
                                     if(dgvms[dgvmsi]=="lpj"){FutureProv_cveg$cveg<-FutureProv_cveg$cveg*100}
                                     
                                     FutureProv_cveg$cveg_percchange <- 100*FutureProv_cveg$cveg/FutureProv_cveg$cveg[which(FutureProv_cveg$temp==0)]
-                                    FutureProv_cveg$cveg_percchange[which(FutureProv_cveg$cveg_percchange>140)]<-140 #thats the range of the data used in the regression 
+                                    FutureProv_cveg$cveg_percchange[which(FutureProv_cveg$cveg_percchange>112)]<-112 #thats the range of the data used in the regression 
                                     
 
                                     FutureNonprov_area <- (aggregate(PFT_area ~ temp , data=Future_areas, FUN = "sum"))
                                     
                                     FutureNonprov_area$area_percchange <- 100*FutureNonprov_area$PFT_area/FutureNonprov_area$PFT_area[which(FutureNonprov_area$temp==0)]
                                     
-                                    #FutureNonprov_area$area_percchange[which(FutureNonprov_area$area_percchange>40)]<-40
+                                    FutureNonprov_area$area_percchange[which(FutureNonprov_area$area_percchange>(100+22.5*2))]<-(100+22.5*2)
+                                    FutureNonprov_area$area_percchange[which(FutureNonprov_area$area_percchange<(100-22.5*2))]<-(100-22.5*2)
+
 
                                     Change_ES_np_area <- data.frame(temp=FutureProv_cveg$temp,changes_es_np_area = (1 + 0.01*((FutureNonprov_area$area_percchange-100) * elasticity_area_nonprov)+
                                                                         0.01*( FutureProv_cveg$cveg_percchange-100) * elasticity_cveg_nonprov))
@@ -2135,13 +1716,17 @@
                                     Future_areas[which(Future_areas$temp==0 & Future_areas$PFT_code=="brevdtt" ),]
 
                                     
-                                    xadj <- NK_ForestT*0.03/sum(PFT_ES$es_val_per_area*PFT_ES$PFT_area)
-                                    xadj_np <- (NK_ForestES+NK_Npa)*0.03/sum(PFT_ES$es_val_per_area_np_final*PFT_ES$PFT_area)
+                                    
                                     
                                     PFT_ES <- aggregate(es_val_per_area_np_final~PFT_code,data=Future_areas[which(Future_areas$temp==0),],FUN="mean")
-                                    PFT_ES$es_val_per_area_np_final <- PFT_ES$es_val_per_area_np_final*xadj_np
-                                    PFT_ES[,(3)] <- aggregate(es_val_per_area~PFT_code,data=Future_areas_prov[which(Future_areas_prov$temp==0),],FUN="mean")[2]*xadj
+                                    PFT_ES$es_val_per_area_np_final <- PFT_ES$es_val_per_area_np_final
+                                    PFT_ES[,(3)] <- aggregate(es_val_per_area~PFT_code,data=Future_areas_prov[which(Future_areas_prov$temp==0),],FUN="mean")[2]
                                     PFT_ES[,(4)] <- aggregate(PFT_area~PFT_code,data=Future_areas[which(Future_areas$temp==0),],FUN="mean")[2]
+                                    xadj <- NK_ForestT*0.03/sum(PFT_ES$es_val_per_area*PFT_ES$PFT_area)
+                                    xadj_np <- (NK_ForestES+NK_Npa)*0.03/sum(PFT_ES$es_val_per_area_np_final*PFT_ES$PFT_area)
+                                    PFT_ES$es_val_per_area_np_final <- PFT_ES$es_val_per_area_np_final*xadj_np
+                                    PFT_ES$es_val_per_area <- PFT_ES$es_val_per_area*xadj
+                                    
                                     PFT_ES[,(5)] <- aggregate(area ~ PFT_code , data = PFT_movement_c_run[which(PFT_movement_c_run$temp==0),], FUN = "sum")[2]
                                     PFT_ES$country <- isos[j]
                                     PFT_ES$dgvm <- dgvms[dgvmsi]
@@ -2160,7 +1745,7 @@
                                     Future_N$error_rf_np <- Results_rf_np$mse[200]^0.5
                                     Future_N$FractionDamage_NonProv_area <- 0.01*((FutureNonprov_area$area_percchange-100) * elasticity_area_nonprov)
                                     Future_N$FractionDamage_NonProv_cveg <- 0.01*( FutureProv_cveg$cveg_percchange-100) * elasticity_cveg_nonprov
-                                    RF_rmse_run <- data.frame(rbind(data.frame(ntrees=seq(1:200),mse=Results_rf$mse,type="Market",run=first),data.frame(ntrees=seq(1:200),mse=Results_rf_np$mse,type="Nonmarket",run=first)))
+                                    RF_rmse_run <- data.frame(rbind(data.frame(ntrees=seq(1:500),mse=Results_rf$mse,type="Market",run=first),data.frame(ntrees=seq(1:500),mse=Results_rf_np$mse,type="Nonmarket",run=first)))
                             
                                     
 
@@ -2184,19 +1769,19 @@
                             }
                     }
             }
-
-            #sum(PFT_movement_c_run$area[which(PFT_movement_c_run$temp==0 & PFT_movement_c_run$PFT_code=="c3hh" & PFT_movement_c_run$clim=="miroc5" & PFT_movement_c_run$scen=="rcp60")])
-            #save(NK_allcountries,file="Data/NK_allcountries_3dgvms_CVEGcap_FixedRF_euclidean_exp.Rda")
-           # save(PFT_ES_all,file="Data/PFT_ES_allcountries_3dgvms_CVEGcap_FixedRF_euclidean_exp.Rda")
-            load("Data/PFT_ES_allcountries_3dgvms_CVEGcap_FixedRF_euclidean_exp.Rda")
-            load("Data/NK_allcountries_3dgvms_CVEGcap_FixedRF_euclidean_exp.Rda")
             
+            # save(NK_allcountries,file="Data/NK_allcountries_final_submission3v2_06052023.Rda")
+            # save(PFT_ES_all,file="Data/PFT_ES_allcountries_final_submission3v2_06052023.Rda")
+            
+            load("Data/NK_allcountries_final_submission3v2_06052023.Rda")
+            load("Data/PFT_ES_allcountries_final_submission3v2_06052023.Rda")
+            glimpse(PFT_ES_all)
+            glimpse(NK_allcountries)
             NK <- merge(NK_allcountries,world[,which(names(world) %in% c("iso_a2","region_un"))], by.x="country",by.y="iso_a2")
-            NK <- NK[which(NK$NK_Provisioning<quantile(NK$NK_NonProvisioning,0.9999)),]
-
+            glimpse(NK)
+            levels(factor(NK$country))
+            
             Regional_damagefunction_Market <- ggplot(NK)+
-            #geom_point(aes(x=temp,y=NK_Provisioning,color=continent))+
-            #geom_smooth(aes(x=temp,y=NK_Provisioning,color=region_un),method="lm",fomrula="y~ poly(x,2)")+
             geom_smooth(aes(x=temp,y=NK_Provisioning,color=region_un),method="loess")+
             geom_hline(aes(yintercept=1),linetype="dashed")+
             theme_bw()+
@@ -2206,7 +1791,6 @@
             coord_cartesian(ylim=c(0.75,1.1))
 
             Regional_damagefunction_NonMarket <- ggplot(NK)+
-            #geom_point(aes(x=temp,y=NK_Provisioning,color=region_un),alpha=0.02)+
             geom_smooth(aes(x=temp,y=NK_NonProvisioning,color=region_un),method="loess")+
             geom_hline(aes(yintercept=1),linetype="dashed")+
             theme_bw()+
@@ -2217,13 +1801,15 @@
 
 
             ggarrange(Regional_damagefunction_Market,Regional_damagefunction_NonMarket,common.legend=TRUE,legend="right")
-            ggsave("Figures/RegionalDamageFunctions_FINAL1_2.png",dpi=600)
+            #ggsave("Figures/RegionalDamageFunctions_FINAL1_2.png",dpi=600)
 
             # Figure ES values per ha
-                 pft_es_lpj <- PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),]
-                glimpse( pft_es_lpj)
-                pft_es_lpj <- aggregate(es_val_per_area_np_final~country+PFT_code,data=pft_es_lpj,FUN="mean")
-                pft_es_lpj$es_val_per_area <- aggregate(es_val_per_area~country+PFT_code,data=PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),],FUN="mean")[,3]
+                glimpse(PFT_ES_all)
+                pft_es_lpj <- PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),]
+                pft_es_lpj <- aggregate(es_val_per_area_np_final~country+PFT_code,data=pft_es_lpj,FUN="first")
+                
+                pft_es_lpj2 <- aggregate(es_val_per_area~country+PFT_code,data=PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),],FUN="first")
+                pft_es_lpj <- merge(pft_es_lpj, pft_es_lpj2, by = c("PFT_code", "country"),all=TRUE)
 
                 pft_es_lpj$PFT_code <- droplevels(pft_es_lpj$PFT_code)
                 pft_es_lpj$PFT_code <- factor(pft_es_lpj$PFT_code,levels=c("trbe","tribe","trbr","c4g","tebe","tebs","ibs","c3g","bine","bne", "bns"))
@@ -2231,11 +1817,13 @@
                 pft_es_lpj<-rbind(data.frame(Biome=pft_es_lpj$PFT_code,Benefits=pft_es_lpj$es_val_per_area_np_final,Type="Non-market"),
                                 data.frame(Biome=pft_es_lpj$PFT_code,Benefits=pft_es_lpj$es_val_per_area,Type="Market"))
 
+                pft_es_lpj <- pft_es_lpj[which(pft_es_lpj$Benefits<quantile(pft_es_lpj$Benefits,0.98,na.rm=TRUE)),]
+                
                 ggplot(pft_es_lpj)+
                 geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=Type,middle=median((Benefits/100)))) +
                 theme_bw()+ coord_cartesian(xlim=c(0,200))
-                ggsave("Figures/ValperHa_LPJ.png",dpi=600)
+                #ggsave("Figures/Final Figures/Submission 3/ValperHa_LPJ_final_S3.png",dpi=600)
 
                 pft_es_car<- PFT_ES_all[which(PFT_ES_all$dgvm=="car"),]
                 pft_es_car$PFT_code <- droplevels(pft_es_car$PFT_code)
@@ -2250,9 +1838,11 @@
                 glimpse(pft_es_car)
 
                 ggplot(pft_es_car)+
-                geom_boxplot(,aes(x=(Benefits/100),y=Biome,
+                geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=factor(Type),middle=mean((Benefits/100)))) +
-                theme_bw()+ coord_cartesian(xlim=c(0,300))
+                theme_bw()+ coord_cartesian(xlim=c(0,50))
+                #ggsave("Figures/Final Figures/Submission 3/ValperHa_CAR_final.png",dpi=600)
+
 
 
                 pft_es_orc<- PFT_ES_all[which(PFT_ES_all$dgvm=="orc"),]
@@ -2267,7 +1857,8 @@
                 ggplot(pft_es_orc)+
                 geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=factor(Type),middle=mean((Benefits/10)))) +
-                theme_bw()+ coord_cartesian(xlim=c(0,300))
+                theme_bw()+ coord_cartesian(xlim=c(0,200))
+                #ggsave("Figures/Final Figures/Submission 3/ValperHa_ORC_final.png",dpi=600)
 
 
 
@@ -2285,128 +1876,146 @@
                 glimpse(PFT_ES_all)
                 glimpse(NK)
 
-                PFT_ES_all <- PFT_ES_all[which(PFT_ES_all$es_val_per_area_np_final<quantile(PFT_ES_all$es_val_per_area_np_final,0.95)),]
-                PFT_ES_all <- PFT_ES_all[which(PFT_ES_all$es_val_per_area<quantile(PFT_ES_all$es_val_per_area,0.95)),]
                 PFT_ES_all <- merge(PFT_ES_all,world[,which(names(world) %in% c("iso_a2","region_un"))], by.x="country",by.y="iso_a2")
+                
                 PFT_ES_all$TotalValES <- PFT_ES_all$es_val_per_area_np_final*PFT_ES_all$PFT_area
                 PFT_ES_all$TotalValGDP <- PFT_ES_all$es_val_per_area*PFT_ES_all$PFT_area
+
+
                 
-                val_lpj <- aggregate(TotalValES~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),], FUN="sum")
-                val_lpj$TotalValGDP <- aggregate(TotalValGDP~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),], FUN="sum")[,3]
+                # ## 
+                    v1 <- PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),]
+                    v1 <- merge(v1,wealth2018[,which(names(wealth2018) %in% c("countrycode2","r5","GDP","Population"))], by.x="country",by.y="countrycode2")
+                    glimpse(v1)
                 
-                glimpse(wealth2018)
-                glimpse(val_lpj)
+                val_lpj <- aggregate(TotalValES~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),], FUN="first")
+                val_lpj2 <- aggregate(TotalValGDP~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="lpj"),], FUN="first")
+                val_lpj <- merge(val_lpj, val_lpj2, by = c("PFT_code", "country"),all=TRUE)
                 wealth2018$countrycode2 <- countrycode(wealth2018$countrycode,origin="iso3c",destination="iso2c")
                 val_lpj <- merge(val_lpj,wealth2018[,which(names(wealth2018) %in% c("countrycode2","r5","GDP"))], by.x="country",by.y="countrycode2")
                 
-                val_lpj$TotalValES_gdp <- val_lpj$TotalValES/val_lpj$GDP
-                
-                 
-                #  glimpse(PFT_movement_lpj)
-                #  sum(PFT_movement_lpj$area[which(PFT_movement_lpj$countrycode=="MX" & 
-                #  PFT_movement_lpj$PFT=="bne" &
-                #  PFT_movement_lpj$clim=="hadgem2-es"&
-                #  PFT_movement_lpj$soc=="2005soc"&
-                #  PFT_movement_lpj$scen=="rcp60"&
-                #  PFT_movement_lpj$decade==2020
-                #  )]) # area is in km^2 not ha
-
-
-                val_lpj$TotalValGDP_gdp <- val_lpj$TotalValGDP/val_lpj$GDP
-                val_lpj$region_un <- val_lpj$r5
-
-                glimpse(val_lpj)
-
-                ES_val_lpj <- aggregate(TotalValES_gdp~PFT_code+region_un,data= val_lpj, FUN="mean")
-                    ES_val_lpj$TotalValGDP_gdp <- aggregate(TotalValGDP_gdp~PFT_code+region_un,data= val_lpj, FUN="mean")[,3]
-
-                    glimpse(ES_val_lpj)
-                    ES_val_lpj$PFT_code <- factor(ES_val_lpj$PFT_code,levels=c("bns","bne","bine", "c3g","ibs",
-                "tebs","tebe","c4g","trbr","tribe","trbe"))
-
-                ES_val_lpj$region_un <- factor(ES_val_lpj$region_un)
-                levels(ES_val_lpj$region_un) <- c("ASIA","LAM", "MAF","OECD","REF")
-                ES_val_lpj$region_un <- factor(ES_val_lpj$region_un,levels=c("OECD","REF","LAM", "ASIA", "MAF" ))
-              
-                    ESValplot <-  ggplot(ES_val_lpj,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
-                        geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
-                geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
-                    guides(fill = guide_legend(reverse=FALSE)) 
-                       ESValplot
-
-                ES_val_lpj2 <- ES_val_lpj
-                ES_val_lpj2$region_un <- factor(ES_val_lpj2$region_un)
-                ES_val_lpj2$region_un <- factor(ES_val_lpj2$region_un,levels=c("OECD","REF","LAM", "ASIA", "MAF" ))
-            
-
-                GDPValplot <-  ggplot(ES_val_lpj2,aes(x=region_un,y=TotalValGDP_gdp*100,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
-                geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
-                geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("Value of benefits (as % of GDP)") + ggtitle("Market goods")+
-                    guides(fill = guide_legend(reverse=FALSE))
-
-                ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="right")
-                ggsave("Figures/Benefits_per_continent_lpj_r5.png",dpi=600)
+                ##
+                    ES_val_lpj3 <- aggregate(TotalValES~PFT_code+r5,data= val_lpj, FUN="sum")
+                    ES_val_lpj4<- aggregate(TotalValGDP~PFT_code+r5,data= val_lpj, FUN="sum")
+                    ES_val_lpj5 <- merge(ES_val_lpj3,ES_val_lpj4,by=c("PFT_code","r5"),all=TRUE)
+                    names(GDPr5)[1]<-"r5"
+                    names(GDPr5)[2]<-"GDP"
+                    #glimpse(ES_val_lpj5)
+                    ES_val_lpj5 <- merge(ES_val_lpj5,GDPr5, by="r5")
+                    ES_val_lpj5$TotalValES_gdp <- ES_val_lpj5$TotalValES/ES_val_lpj5$GDP
+                    ES_val_lpj5$TotalValGDP_gdp <- ES_val_lpj5$TotalValGDP/ES_val_lpj5$GDP
                     
-                #         ES_val_car <- aggregate(TotalValES_gdp~PFT_code+region_un,data= PFT_ES_all[which(PFT_ES_all$dgvm=="car"),], FUN="mean")
-                #         ES_val_car$TotalValGDP_gdp <- aggregate(TotalValGDP_gdp~PFT_code+region_un,data= PFT_ES_all[which(PFT_ES_all$dgvm=="car"),], FUN="mean")[,3]
+                    
+                    ES_val_lpj5$PFT_code <- factor(ES_val_lpj5$PFT_code,levels=c("bns","bne","bine", "c3g","ibs",
+                        "tebs","tebe","c4g","trbr","tribe","trbe"))
 
-                #         glimpse(ES_val_car)
-                #         ES_val_car$PFT_code <- factor(ES_val_car$PFT_code,levels=c("brsuas", "brsutecds","brevtecds","ndsutecdt","ndevtecdt","brsutecdt", "c3dh","c3hh","brsuteclt","ndevteclt",
-                #     "brsutewmt","brsutewms","brevtewms","ndevstdit","ndsustswt","brevstdit","brevdttht",
-                #     "c4h","brevxs","sds","ndevtedtt","ndevtedttht","brevdtt",
-                #     "brrgtrt","brevtrt","trs"))
+                    ES_val_lpj5$region_un <- factor(ES_val_lpj5$r5)
+                        levels(ES_val_lpj5$region_un) <- c("ASIA","LAM", "MAF","OECD","REF")
+                    ES_val_lpj5$region_un <- factor(ES_val_lpj5$region_un,levels=c("ASIA","OECD","REF","LAM",  "MAF" ))
+                    
+                    ESValplot <-  ggplot(ES_val_lpj5,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    ESValplot 
+                    ES_val_lpj6 <- ES_val_lpj5
+                    ES_val_lpj6$region_un <- factor(ES_val_lpj5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
+                    
+                    GDPValplot <-  ggplot(ES_val_lpj6,aes(x=region_un,y=100*TotalValGDP_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    GDPValplot 
+                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
+                    #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_lpj.png",dpi=600)
+                ##
 
-                #     ES_val_car$region_un <- factor(ES_val_car$region_un,levels=c("Europe","Oceania", "Americas","Asia","Africa"))
+
+                val_car <- aggregate(TotalValES~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="car"),], FUN="first")
+                val_car2 <- aggregate(TotalValGDP~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="car"),], FUN="first")
+                val_car <- merge(val_car, val_car2, by = c("PFT_code", "country"),all=TRUE)
+                wealth2018$countrycode2 <- countrycode(wealth2018$countrycode,origin="iso3c",destination="iso2c")
+                val_car <- merge(val_car,wealth2018[,which(names(wealth2018) %in% c("countrycode2","r5","GDP"))], by.x="country",by.y="countrycode2")
                 
-                #     ESValplot <-  ggplot(ES_val_car,aes(x=region_un,y=100*TotalValES_gdp/2,fill=PFT_code))+ #Divided by two becase CAR has 2 levels of vegetation
-                #     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
-                #     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
-                #         guides(fill = guide_legend(reverse=FALSE)) 
+                ##
+                    ES_val_car3 <- aggregate(TotalValES~PFT_code+r5,data= val_car, FUN="sum")
+                    ES_val_car4<- aggregate(TotalValGDP~PFT_code+r5,data= val_car, FUN="sum")
+                    ES_val_car5 <- merge(ES_val_car3,ES_val_car4,by=c("PFT_code","r5"),all=TRUE)
+                    names(GDPr5)[1]<-"r5"
+                    names(GDPr5)[2]<-"GDP"
+                    #glimpse(ES_val_car5)
+                    ES_val_car5 <- merge(ES_val_car5,GDPr5, by="r5")
+                    ES_val_car5$TotalValES_gdp <- ES_val_car5$TotalValES/ES_val_car5$GDP
+                    ES_val_car5$TotalValGDP_gdp <- ES_val_car5$TotalValGDP/ES_val_car5$GDP
+                    
+                    ES_val_car$PFT_code <- factor(ES_val_car$PFT_code,levels=c("brsuas", "brsutecds","brevtecds","ndsutecdt","ndevtecdt","brsutecdt", "c3dh","c3hh","brsuteclt","ndevteclt",
+                    "brsutewmt","brsutewms","brevtewms","ndevstdit","ndsustswt","brevstdit","brevdttht",
+                    "c4h","brevxs","sds","ndevtedtt","ndevtedttht","brevdtt",
+                    "brrgtrt","brevtrt","trs"))
+                    #ES_val_car5$PFT_code <- factor(ES_val_car5$PFT_code,levels=c("bns","bne","bine", "c3g","ibs",
+                    #    "tebs","tebe","c4g","trbr","tribe","trbe"))
 
-                #     ES_val_car2<- ES_val_car
-                #     ES_val_car2$region_un <- factor(ES_val_car2$region_un,levels=c("Europe","Asia", "Americas","Oceania", "Africa" ))
-            
+                    ES_val_car5$region_un <- factor(ES_val_car5$r5)
+                        levels(ES_val_car5$region_un) <- c("ASIA","LAM", "MAF","OECD","REF")
+                    ES_val_car5$region_un <- factor(ES_val_car5$region_un,levels=c("ASIA","OECD","REF","LAM",  "MAF" ))
+                    
+                    ESValplot <-  ggplot(ES_val_car5,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    ESValplot 
 
-                #   GDPValplot <-  ggplot(ES_val_car2,aes(x=region_un,y=TotalValGDP_gdp*100,fill=PFT_code))+ #Divided by two becase CAR has 2 levels of vegetation
-                #     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
-                #     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("Value of benefits (as % of GDP)") + ggtitle("Market goods")+
-                #         guides(fill = guide_legend(reverse=FALSE))
+                    ES_val_car6 <- ES_val_car5
+                    ES_val_car6$region_un <- factor(ES_val_car5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
+                    
+                    GDPValplot <-  ggplot(ES_val_car6,aes(x=region_un,y=100*TotalValGDP_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    GDPValplot 
+                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
+                    #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_car.png",dpi=600)
+                # ##
 
-                #     ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="right")
-                #     ggsave("Benefits_per_continent_car.png",dpi=600)
-
-
-                #     ES_val_orc <- aggregate(TotalValES_gdp~PFT_code+region_un,data= PFT_ES_all[which(PFT_ES_all$dgvm=="orc"),], FUN="mean")
-                #     ES_val_orc$TotalValGDP_gdp <- aggregate(TotalValGDP_gdp~PFT_code+region_un,data= PFT_ES_all[which(PFT_ES_all$dgvm=="orc"),], FUN="mean")[,3]
-
-                #     glimpse(ES_val_orc)
-                #     ES_val_orc$PFT_code <- factor(ES_val_orc$PFT_code,levels=c("bobrsu","bondev","bondsu","c3gra","tebrsu","tebrev","tendev",
-                #                                "c4gra","trbrev" ,"trbrrg"))
-
-                #     ES_val_orc$region_un <- factor(ES_val_orc$region_un,levels=c("Europe","Asia", "Americas", "Africa","Oceania"))
+                val_orc <- aggregate(TotalValES~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="orc"),], FUN="first")
+                val_orc2 <- aggregate(TotalValGDP~PFT_code+country,data= PFT_ES_all[which(PFT_ES_all$dgvm=="orc"),], FUN="first")
+                val_orc <- merge(val_orc, val_orc2, by = c("PFT_code", "country"),all=TRUE)
+                wealth2018$countrycode2 <- countrycode(wealth2018$countrycode,origin="iso3c",destination="iso2c")
+                val_orc <- merge(val_orc,wealth2018[,which(names(wealth2018) %in% c("countrycode2","r5","GDP"))], by.x="country",by.y="countrycode2")
                 
-                #     ESValplot <-  ggplot(ES_val_orc,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
-                #     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(3),pal_temp(3), pal_trop(4)))+
-                #     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
-                #         guides(fill = guide_legend(reverse=FALSE)) 
+                ##
+                    ES_val_orc3 <- aggregate(TotalValES~PFT_code+r5,data= val_orc, FUN="sum")
+                    ES_val_orc4<- aggregate(TotalValGDP~PFT_code+r5,data= val_orc, FUN="sum")
+                    ES_val_orc5 <- merge(ES_val_orc3,ES_val_orc4,by=c("PFT_code","r5"),all=TRUE)
+                    ES_val_orc5 <- merge(ES_val_orc5,GDPr5, by="r5")
+                    ES_val_orc5$TotalValES_gdp <- ES_val_orc5$TotalValES/ES_val_orc5$GDP
+                    ES_val_orc5$TotalValGDP_gdp <- ES_val_orc5$TotalValGDP/ES_val_orc5$GDP
+                    
+                    ES_val_orc5$PFT_code <-  factor(ES_val_orc5$PFT_code,levels=c("bobrsu","bondev","bondsu","c3gra","tebrsu","tebrev","tendev",
+                                           "c4gra","trbrev" ,"trbrrg"))
+                    
+                    ES_val_orc5$region_un <- factor(ES_val_orc5$r5)
+                        levels(ES_val_orc5$region_un) <- c("ASIA","LAM", "MAF","OECD","REF")
+                    ES_val_orc5$region_un <- factor(ES_val_orc5$region_un,levels=c("ASIA","OECD","REF","LAM",  "MAF" ))
+                    
+                    ESValplot <-  ggplot(ES_val_orc5,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+scale_fill_manual(values = c(pal_boreal(3),pal_temp(3), pal_trop(4)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    ESValplot 
 
-                #     ES_val_orc2<- ES_val_orc
-                #     ES_val_orc2$region_un <- factor(ES_val_orc2$region_un,levels=c("Europe","Asia","Oceania","Americas", "Africa"))
+                    ES_val_orc6 <- ES_val_orc5
+                    ES_val_orc6$region_un <- factor(ES_val_orc5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
+                    
+                    GDPValplot <-  ggplot(ES_val_orc6,aes(x=region_un,y=100*TotalValGDP_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
+                                    geom_bar(stat="identity")+scale_fill_manual(values = c(pal_boreal(3),pal_temp(3), pal_trop(4)))+
+                                    geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
+                                guides(fill = guide_legend(reverse=FALSE)) 
+                    GDPValplot 
+                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
+                    #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_orc.png",dpi=600)
                 
-
-                #   GDPValplot <-  ggplot(ES_val_orc2,aes(x=region_un,y=TotalValGDP_gdp*100,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
-                #     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(3),pal_temp(4), pal_trop(3)))+
-                #     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("Value of benefits (as % of GDP)") + ggtitle("Market goods")+
-                #         guides(fill = guide_legend(reverse=FALSE))
-
-                #     ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="right")
-                #     ggsave("Benefits_per_continent_orc.png",dpi=600)
-                
-
-            #Figure Total Values per Continent
-
-        
-
+       
 
             isos <- (levels(factor(NK$country))) #139
             NK$Omega_NProv <- NK$NK_NonProvisioning - 1
@@ -2415,25 +2024,25 @@
             NK$error_rf_p_w <- 1/NK$error_rf_p
             NK$error_rf_np_w <- 1/NK$error_rf_np
             isos <- levels(factor(NK$country))
-            glimpse(NK)  
-            glimpse(a)          
+                
             
             tempdecade <- a[a$DGVM=="lpj" & a$PFT=="bne" & a$IDcell==9635,]
             glimpse(tempdecade)
             NK$tempid <- paste0(NK$clim,NK$scen,NK$temp)
             tempdecade$tempid <- paste0(tempdecade$clim,tempdecade$scen,tempdecade$temp)
-            tempdecade <- tempdecade[,c(15,12)]
+            tempdecade <- tempdecade[,which(names(tempdecade) %in% c("tempid","decade"))]
             NK <- merge(NK,tempdecade,by="tempid",all.x=TRUE)
             glimpse(NK)  
-            save(NK,file="Data/DamageNK_Temp.Rda")
+            glimpse(tempdecade)
+            #save(NK,file="Data/DamageNK_Temp.Rda")
 
             NK_temp <- NK[,c(2,3,6,7,8,9,10,19,18,17,16,15)]
             glimpse(NK_temp)
             names(NK_temp)[c(6,7,9,10,11,12)] <- c("error_rf_mN","error_rf_nN","error_rf_nN_w","error_rf_mN_w","Omega_mN","Omega_nN")
             
-            save(NK_temp,file="Data/DamageNK_Temp.Rda")
+            #save(NK_temp,file="Data/DamageNK_Temp.Rda")
            
-           load(file=paste0(dir,"DamageNK_Temp.Rda"))
+            #load(file=paste0(dir,"DamageNK_Temp.Rda"))
 
 
             results_df <- data.frame(coef = numeric(), se = numeric(),pval=numeric(), country = character(), formula = character(), capital = character(), dgvm=character(),stringsAsFactors = F)
@@ -2446,29 +2055,8 @@
         for (c in country_list){
             NK_temp_c <- NK_temp_all[NK_temp_all$country==c,]
             country <- c
+            ggplot(NK_temp_c)+geom_point(aes(x=temp,y=Omega_mN,color=clim,shape=dgvm))
             if(is.nan(NK_temp_c$Omega_nN[1]) | is.nan(NK_temp_c$Omega_mN[1])){next}
-
-                # country_damagefunction <- ggplot(NK_temp_c,aes(color=country))+
-                # geom_point(aes(x=temp,y=Omega_mN,color=country,shape=dgvm),alpha=0.5)+
-                # geom_point(aes(x=temp,y=Omega_mN,color=country,shape=dgvm),color="darkblue",alpha=0.5)+
-                # geom_smooth(aes(x=temp,y=Omega_mN,color=country,weight = error_rf_mN),method="lm",formula="y~0+I(x^2)",color="darkblue",linetype=2)+
-                # geom_point(aes(x=temp,y=Omega_nN,color=country,shape=dgvm),color="indianred",alpha=0.5)+
-                # geom_smooth(aes(x=temp,y=Omega_nN,color=country,weight = error_rf_nN),method="lm",formula="y~ 0+ I(x^2)",color="indianred",linetype=2)+
-                # geom_smooth(aes(x=temp,y=Omega_mN,color=country,weight = error_rf_mN),method="lm",formula="y~0+log(x+1)",color="darkblue")+
-                # geom_smooth(aes(x=temp,y=Omega_nN,color=country,weight = error_rf_nN),method="lm",formula="y~ 0+log(x+1)",color="indianred")+
-                # geom_smooth(aes(x=temp,y=Omega_mN,color=country,weight = error_rf_mN),method="lm",formula="y~0+x",color="darkblue",linetype=3)+
-                # geom_smooth(aes(x=temp,y=Omega_nN,color=country,weight = error_rf_nN),method="lm",formula="y~ 0+x",color="indianred",linetype=3)+
-                # theme_bw() +
-                # scale_color_manual(name='Type of Natural Capital',
-                #      labels=c('Market', 'Nonmarket'),
-                #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-                # ggtitle(paste("Damage Functions. Country = ",country))+
-                # xlab("Temperature Change (relative to 20006-2020)")+
-                # ylab("Natural Capital Change")
-                # country_damagefunction
-                # ggsave(country_damagefunction, file=paste0("Figures/CountriesDamFun/All_data_damagefunction_", country,".png"), dpi=300)
-                
-
 
             for(i in 1:length(formulas)){
                 for (j in 1:length(dgvmodel)){
@@ -2504,473 +2092,12 @@
         results_df$iso3 <- countrycode(results_df$country, origin="iso2c",destination="iso3c")
         glimpse(results_df)
         
-        write.csv(results_df,"Damage_coef.csv")
+        results_df[results_df$formula=="lin" & results_df$iso3=="CHN",]
+        
+        #write.csv(results_df,"Damage_coef_Submission3v2_06052023.csv")
             
-            # for (i in 1:length(levels(factor(NK$country)))){
-            #     #for (i in 1:15){
-            #     NK_c <- NK[NK$country==isos[i],]
-            #     if(is.nan(NK_c$Omega_NProv[1]) | is.nan(NK_c$Omega_Prov[1])){next}
-            #     if(isos[i]=="CZ"){
-            #         NK_c <- NK_c[which(abs(NK_c$Omega_Prov)<quantile(abs(NK_c$Omega_Prov),0.9)),]
-
-            #     }
-
-            #     #NK_c <- NK_c[which(NK_c$sceni!="rcp85" & NK_c$clim %in% c("gfdl-esm2m","ipsl-cm5a-lr")),]
-            #     country_damagefunction <- ggplot(NK_c,aes(color=country))+
-            #     geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),alpha=0.5)+
-            #     geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue",alpha=0.5)+
-            #     #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+ I(x^2)",color="darkblue")+
-            #     geom_smooth(aes(x=temp,y=Omega_Prov,color=country,weight = error_rf_p_w),method="lm",formula="y~0+I(x^2)",color="darkblue",linetype=2)+
-            #     #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred",alpha=0.5)+
-            #     #geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w,linetype=dgvm),method="lm",formula="y~ 0+ I(x^2)",color="indianred")+
-            #     geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w),method="lm",formula="y~ 0+ I(x^2)",color="indianred",linetype=2)+
-            #     geom_smooth(aes(x=temp,y=Omega_Prov,color=country,weight = error_rf_p_w),method="lm",formula="y~0+log(x+1)",color="darkblue")+
-            #     geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w),method="lm",formula="y~ 0+log(x+1)",color="indianred")+
-            #     #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     theme_bw() +
-            #     scale_color_manual(name='Type of Natural Capital',
-            #          labels=c('Market', 'Nonmarket'),
-            #          values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # scale_linetype_manual(name='Function',
-            #     #     labels=c('Squared', 'Logarithmic'),
-            #     #    values=c("dashed","dashed"))+
-            #     ggtitle(paste("Damage Functions. Squared (dashed) and Log (solid) Functions. Country = ",isos[i]))+
-            #     xlab("Temperature Change (relative to 20006-2020)")+
-            #     ylab("Natural Capital Change")
-            #     country_damagefunction
-
-            #     # country_damagefunction <- ggplot(NK_c,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+ I(x^2)",color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country,weight = error_rf_p_w),method="lm",formula="y~0+I(x^2)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w),method="lm",formula="y~ 0+ I(x^2)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Squared 2 coefficients. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-
-
-            #     # country_damagefunction_Market2coeff <- ggplot(NK_c,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+ I(x^2)",color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country,weight = error_rf_p_w),method="lm",formula="y~x+I(x^2)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w),method="lm",formula="y~ x+ I(x^2)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Squared 2 coefficients. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-
-            #     # country_damagefunction_LOG2coeff <- ggplot(NK_c[NK_c$temp>0,],aes(color=country))+
-            #     # #country_damagefunction_LOG <- ggplot(NK_c,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~1+(x)+log(x+1)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country),method="lm",formula="y~ 1+(x)+log(x+1)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Log 2 coefficients. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-            #     # country_damagefunction_LOG <- ggplot(NK_c[NK_c$temp>0,],aes(color=country))+
-            #     # #country_damagefunction_LOG <- ggplot(NK_c,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+log(x+1)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country),method="lm",formula="y~ 0+log(x+1)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Log 2 coefficients. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-
-
-
-            #     # country_damagefunction_Market_loess <- ggplot(NK_c,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="loess",formula="y~0+ x",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country),method="loess",formula="y~ 0+ x",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-            #     NK_c_equal <- NK_c[which(NK_c$sceni!="rcp85" & NK_c$clim %in% c("gfdl-esm2m","ipsl-cm5a-lr")),]
-            #     # NK_c_equal <- NK_c[which(NK_c$sceni!="rcp85" ),]
-            #     # #max(NK_c_equal$temp)
-            #     # #NK_c_equal <- NK_c[which(NK_c$temp <3),]
-            #     # country_damagefunction_Market_equal <- ggplot(NK_c_equal,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0 + I(x^2)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country),method="lm",formula="y~ 0+ I(x^2)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-
-            #     # country_damagefunction_Market_equal_quadratic <- ggplot(NK_c_equal,aes(color=country))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm))+
-            #     # geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=dgvm),color="darkblue")+
-            #     # geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+ I(x^2)",color="darkblue")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #     # geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=dgvm),color="indianred")+
-            #     # geom_smooth(aes(x=temp,y=Omega_NProv,color=country),method="lm",formula="y~0+ I(x^2)",color="indianred")+
-            #     # #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #     # theme_bw() +
-            #     # scale_color_manual(name='Type of Natural Capital',
-            #     #      breaks=c('Market', 'Nonmarket'),
-            #     #      values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #     # ggtitle(paste("Natural Capital Damage Function. Country = ",isos[i]))+
-            #     # xlab("Temperature Change (relative to 20006-2020)")+
-            #     # ylab("Natural Capital Change")
-
-
-                
-
-            #     model_NKMarket <- felm(Omega_Prov ~ 0 + I(temp^2)|clim+sceni+dgvm|0|0,data=NK_c)
-            #     model_NKMarket <- felm(Omega_Prov ~ 0 + I(temp^2)|decade+clim+sceni+dgvm|0|0,data=NK_c)
-            #     #summary(model_NKMarket)
-            #     #model_NKMarket <- lm(Omega_Prov ~ 0 + I(temp^2),weights=(1/NK_c$error_rf_p),data=NK_c)
-
-                
-            #     model_NKMarket_eq <- felm(Omega_Prov ~ 0 + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c_equal$error_rf_p),data=NK_c_equal)
-            #     #summary(model_NKMarket_eq)
-                
-            #     #model_NKNonMarket <- lm(Omega_NProv ~ 0 + I(temp^2),weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     model_NKNonMarket <- felm(Omega_NProv ~ 0 + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     #summary(model_NKNonMarket)
-
-                
-            #     model_NKNonMarket_eq <- felm(Omega_NProv ~ 0 + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c_equal$error_rf_p),data=NK_c_equal)
-            #     #summary(model_NKNonMarket_eq)
-
-
-                
-            #     #model_NKMarket_log <- lm(Omega_Prov ~ 0 + log(temp+1),weights=(1/NK_c$error_rf_p),data=NK_c)
-            #     model_NKMarket_log <- felm(Omega_Prov ~ 0 + log(temp+1)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_p),data=NK_c)
-            #     #summary(model_NKMarket_log)
-                
-            #     model_NKNonMarket_log <- felm(Omega_NProv ~ 0 + log(temp+1)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     #model_NKNonMarket_log <- lm(Omega_NProv ~ 0 + log(temp+1)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_np),data=NK_c)
-
-                
-            #     model_NKMarket_2sq <- felm(Omega_Prov ~ 0 + temp + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_p),data=NK_c)
-            #     #summary(model_NKMarket_2sq)
-            #     #model_NKMarket_2sq <- lm(Omega_Prov ~ 0 + temp + I(temp^2)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_p),data=NK_c)
-
-            #     model_NKMarket_2sq_eq <- felm(Omega_Prov ~ 0 + temp + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c_equal$error_rf_p),data=NK_c_equal)
-            #     #summary(model_NKMarket_2sq_eq)
-            #     #model_NKMarket_2sq <- lm(Omega_Prov ~ 0 + temp + I(temp^2)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_p),data=NK_c)
-                
-                
-            #     model_NKNonMarket_2sq <- felm(Omega_NProv ~ 0 + temp + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     #model_NKNonMarket_2sq <- lm(Omega_NProv ~ 0 + temp + I(temp^2)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_np),data=NK_c)
-
-                
-            #     model_NKMarket_log_2 <- felm(Omega_Prov ~ 0 + temp + log(temp+1)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_p),data=NK_c)
-            #     #model_NKMarket_log_2 <- lm(Omega_Prov ~ 0 + temp + log(temp+1)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_p),data=NK_c)
-                
-            #     model_NKNonMarket_log_2 <- felm(Omega_NProv ~ 0 + temp + log(temp+1)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     #model_NKNonMarket_log_2 <- lm(Omega_NProv ~ 0 + temp + log(temp+1)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_np),data=NK_c)
-
-                
-            #     model_NKMarket_2sq <- felm(Omega_Prov ~ 0 + temp + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_p),data=NK_c)
-            #     #model_NKMarket_2sq <- lm(Omega_Prov ~ 0 + temp + I(temp^2)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_p),data=NK_c)
-                
-            #     model_NKNonMarket_2sq <- felm(Omega_NProv ~ 0 + temp + I(temp^2)|decade+clim+sceni+dgvm|0|0,weights=(1/NK_c$error_rf_np),data=NK_c)
-            #     #model_NKNonMarket_2sq <- lm(Omega_NProv ~ 0 + temp + I(temp^2)|clim+sceni+dgvm|0|clim+sceni+dgvm,weights=(1/NK_c$error_rf_np),data=NK_c)
-
-
-            #     Omega_NK_data <- rbind(data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA, 
-            #         Omega_NK_c1_se = NA, 
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKMarket)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKMarket)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKMarket)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKMarket)$adj.r.squared,
-            #         NK_type="Market",
-            #         Function = "Sq"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA, 
-            #         Omega_NK_c1_se = NA,
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKNonMarket)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKNonMarket)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKNonMarket)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKNonMarket)$adj.r.squared,
-            #         NK_type="NonMarket",
-            #         Function = "Sq"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA, 
-            #         Omega_NK_c1_se = NA, 
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKMarket_eq)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKMarket_eq)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKMarket_eq)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKMarket_eq)$adj.r.squared,
-            #         NK_type="Market",
-            #         Function = "SqEq"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA, 
-            #         Omega_NK_c1_se = NA,
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKNonMarket_eq)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKNonMarket_eq)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKNonMarket_eq)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKNonMarket_eq)$adj.r.squared,
-            #         NK_type="NonMarket",
-            #         Function = "SqEq"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA,
-            #         Omega_NK_c1_se = NA,
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKMarket_log)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKMarket_log)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKMarket_log)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKMarket_log)$adj.r.squared,
-            #         NK_type="Market",
-            #         Function = "Log"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = NA,
-            #         Omega_NK_c1_se = NA,
-            #         Omega_NK_c1_pval = NA,
-            #         Omega_NK_c2 = summary(model_NKNonMarket_log)$coefficient[1], 
-            #         Omega_NK_c2_se = summary(model_NKNonMarket_log)$coefficient[2],
-            #         Omega_NK_c2_pval = summary(model_NKNonMarket_log)$coefficient[4],
-            #         Omega_NK_rsq = summary(model_NKNonMarket_log)$adj.r.squared,
-            #         NK_type="NonMarket",
-            #         Function = "Log"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = summary(model_NKMarket_2sq)$coefficient[1], 
-            #         Omega_NK_c1_se = summary(model_NKMarket_2sq)$coefficient[3],
-            #         Omega_NK_c1_pval = summary(model_NKMarket_2sq)$coefficient[7],
-            #         Omega_NK_c2 = summary(model_NKMarket_2sq)$coefficient[2], 
-            #         Omega_NK_c2_se = summary(model_NKMarket_2sq)$coefficient[4],
-            #         Omega_NK_c2_pval = summary(model_NKMarket_2sq)$coefficient[8],
-            #         Omega_NK_rsq = summary(model_NKMarket_2sq)$adj.r.squared,
-            #         NK_type="Market",
-            #         Function = "Sq 2 coeff"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = summary(model_NKNonMarket_2sq)$coefficient[1], 
-            #         Omega_NK_c1_se = summary(model_NKNonMarket_2sq)$coefficient[3],
-            #         Omega_NK_c1_pval = summary(model_NKNonMarket_2sq)$coefficient[7],
-            #         Omega_NK_c2 = summary(model_NKNonMarket_2sq)$coefficient[2], 
-            #         Omega_NK_c2_se = summary(model_NKNonMarket_2sq)$coefficient[4],
-            #         Omega_NK_c2_pval = summary(model_NKNonMarket_2sq)$coefficient[8],
-            #         Omega_NK_rsq = summary(model_NKNonMarket_2sq)$adj.r.squared,
-            #         NK_type="NonMarket",
-            #         Function = "Sq 2 coeff"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = summary(model_NKMarket_log_2)$coefficient[1], 
-            #         Omega_NK_c1_se = summary(model_NKMarket_log_2)$coefficient[3],
-            #         Omega_NK_c1_pval = summary(model_NKMarket_log_2)$coefficient[7],
-            #         Omega_NK_c2 = summary(model_NKMarket_log_2)$coefficient[2], 
-            #         Omega_NK_c2_se = summary(model_NKMarket_log_2)$coefficient[4],
-            #         Omega_NK_c2_pval = summary(model_NKMarket_log_2)$coefficient[8],
-            #         Omega_NK_rsq = summary(model_NKMarket_log_2)$adj.r.squared,
-            #         NK_type="Market",
-            #         Function = "Log 2 coeff"),
-            #         data.frame(country = isos[i], 
-            #         Omega_NK_c1 = summary(model_NKNonMarket_log_2)$coefficient[1], 
-            #         Omega_NK_c1_se = summary(model_NKNonMarket_log_2)$coefficient[3],
-            #         Omega_NK_c1_pval = summary(model_NKNonMarket_log_2)$coefficient[7],
-            #         Omega_NK_c2 = summary(model_NKNonMarket_log_2)$coefficient[2], 
-            #         Omega_NK_c2_se = summary(model_NKNonMarket_log_2)$coefficient[4],
-            #         Omega_NK_c2_pval = summary(model_NKNonMarket_log_2)$coefficient[8],
-            #         Omega_NK_rsq = summary(model_NKNonMarket_log_2)$adj.r.squared,
-            #         NK_type="NonMarket",
-            #         Function = "Log 2 coeff")
-            #         )
-                
-            #     if (i ==1){
-            #         Omega_NK <- Omega_NK_data 
-            #     } else {
-                    
-            #         Omega_NK <- rbind(Omega_NK,Omega_NK_data)
-            #     }
-                
-
-
-
-
-
-
-             
-            #       ggsave(country_damagefunction, file=paste0("Figures/CountriesDamFun_LogSq/All_data_damagefunction_", isos[i],".png"), dpi=300)
-            #     # # ggsave(country_damagefunction_Market_loess, file=paste0("Figures/Countries/LOESS_damagefunction_", isos[i],".png"), dpi=300)
-            #      #ggsave(country_damagefunction_Market_equal, file=paste0("Figures/Countries/Equal_damagefunction_", isos[i],".png"), dpi=300)          
-            #     #  ggsave(country_damagefunction_Market_equal, file=paste0("Figures/Countries/EqualQuad_damagefunction_", isos[i],".png"), dpi=300)
-            #       #ggsave(country_damagefunction_LOG, file=paste0("Figures/Countries/LOG_damagefunction_", isos[i],".png"), dpi=300)
-            #       #ggsave(country_damagefunction_LOG2coeff, file=paste0("Figures/Countries/2coeff_log_damagefunction_", isos[i],".png"), dpi=300)
-
-            #       #ggsave(country_damagefunction_Market2coeff, file=paste0("Figures/Countries/2coeff_quad_damagefunction_", isos[i],".png"), dpi=300)
-            #     # ggsave(country_damagefunction_Market_loess, file=paste0("Figures/3dgvm_Countries/LOESS_damagefunction_", isos[i],".png"), dpi=300)
-            #     # ggsave(country_damagefunction_Market_equal, file=paste0("Figures/3dgvm_Countries/Equal_damagefunction_", isos[i],".png"), dpi=300)          
-            #     # ggsave(country_damagefunction_Market_equal_quadratic, file=paste0("Figures/3dgvm_Countries/EqualQuad_damagefunction_", isos[i],".png"), dpi=300)
-            #     # ggsave(country_damagefunction_LOG, file=paste0("Figures/3dgvm_Countries/2coeff_LOG_damagefunction_", isos[i],".png"), dpi=300)
-            # }
-
-            # #DGVM one by one
-            #     for (i in 1:length(levels(factor(NK$country)))){
-            #         #for (i in 1:15){
-            #         NK_c <- NK[NK$country==isos[i],]
-            #         if(is.nan(NK_c$Omega_NProv[1]) | is.nan(NK_c$Omega_Prov[1])){next}
-            #         if(isos[i]=="CZ"){
-            #             NK_c <- NK_c[which(abs(NK_c$Omega_Prov)<quantile(abs(NK_c$Omega_Prov),0.9)),]
-
-            #         }
-
-            #             dgvms <- levels(factor(NK_c$dgvm))
-            #         for (di in 1:length(dgvms)){
-            #             NK_cd <- NK_c[which(NK_c$dgvm==dgvms[di]),]
-                        
-            #             country_damagefunction <- ggplot(NK_cd,aes(color=country))+
-            #             geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=clim))+
-            #             geom_point(aes(x=temp,y=Omega_Prov,color=country,shape=clim),color="darkblue")+
-            #             #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),method="lm",formula="y~0+ I(x^2)",color="darkblue")+
-            #             geom_smooth(aes(x=temp,y=Omega_Prov,color=country,weight = error_rf_p_w),method="lm",formula="y~0+I(x^2)",color="darkblue")+
-            #             #geom_smooth(aes(x=temp,y=Omega_Prov,color=country),color="darkblue")+
-            #             geom_point(aes(x=temp,y=Omega_NProv,color=country,shape=clim),color="indianred")+
-            #             geom_smooth(aes(x=temp,y=Omega_NProv,color=country,weight = error_rf_np_w),method="lm",formula="y~ 0+ I(x^2)",color="indianred")+
-            #             #geom_smooth(aes(x=temp,y=Omega_NProv,color=country),color="indianred")+
-            #             theme_bw() +
-            #             scale_color_manual(name='Type of Natural Capital',
-            #                 breaks=c('Market', 'Nonmarket'),
-            #                 values=c('Market'='darkblue', 'Nonmarket'='indianred'))+
-            #             ggtitle(paste("Natural Capital Damage Function. Squared 2 coefficients. Country = ",isos[i]))+
-            #             xlab("Temperature Change (relative to 20006-2020)")+
-            #             ylab("Natural Capital Change")
-
-                        
-            #             model_NKMarket <- felm(Omega_Prov ~ 0 + I(temp^2)|clim+sceni|0|0,weights=(1/NK_cd$error_rf_p),data=NK_cd)
-            #             model_NKNonMarket <- felm(Omega_NProv ~ 0 + I(temp^2)|clim+sceni|0|0,weights=(1/NK_cd$error_rf_np),data=NK_cd)
-
-            #             Omega_NK_data <- rbind(data.frame(country = isos[i], 
-            #             Omega_NK_c1 = NA, 
-            #             Omega_NK_c1_se = NA, 
-            #             Omega_NK_c1_pval = NA,
-            #             Omega_NK_c2 = summary(model_NKMarket)$coefficient[1], 
-            #             Omega_NK_c2_se = summary(model_NKMarket)$coefficient[2],
-            #             Omega_NK_c2_pval = summary(model_NKMarket)$coefficient[4],
-            #             Omega_NK_rsq = summary(model_NKMarket)$adj.r.squared,
-            #             NK_type="Market",
-            #             Function = "Sq",
-            #             DGVM=dgvms[di]),
-            #             data.frame(country = isos[i], 
-            #             Omega_NK_c1 = NA, 
-            #             Omega_NK_c1_se = NA,
-            #             Omega_NK_c1_pval = NA,
-            #             Omega_NK_c2 = summary(model_NKNonMarket)$coefficient[1], 
-            #             Omega_NK_c2_se = summary(model_NKNonMarket)$coefficient[2],
-            #             Omega_NK_c2_pval = summary(model_NKNonMarket)$coefficient[4],
-            #             Omega_NK_rsq = summary(model_NKNonMarket)$adj.r.squared,
-            #             NK_type="NonMarket",
-            #             Function = "Sq",
-            #             DGVM=dgvms[di]))
-
-            #             if (i ==1){
-            #             Omega_NK <- Omega_NK_data 
-            #                         } else {
-                                        
-            #                             Omega_NK <- rbind(Omega_NK,Omega_NK_data)
-            #                         }
-                    
-            #             ggsave(country_damagefunction, file=paste0("Figures/CountriesDamFun/",dgvms[di],"/quad_damagefunction_",dgvms[di],isos[i],".png"), dpi=300)
-
-            #         }
-            #     }
-            
-
-            #     write.csv(Omega_NK,file="Data/Omega_NK_damage_function_Different_DGVMs.csv")
-            #     Omega_NK <- read.csv("Data/Omega_NK_damage_function_Different_DGVMs.csv")
-            #     glimpse(Omega_NK)               
-
-            #     ggplot(Omega_NK[which(Omega_NK$Function=="Sq"&Omega_NK$NK_type=="Market"),], aes(Omega_NK_c2_pval)) +
-            #         geom_histogram(fill="indianred",breaks=c(0,0.01,0.05,seq(1:100)*0.1))+
-            #         theme_bw() + ggtitle("Market NC damage function coefficient")+ xlab ("") + 
-            #         geom_vline(aes(xintercept=0.01),linetype="dashed")+xlim(0,1)+
-            #         annotate("text", x=0.02, y=60, label="0.01", angle=90,size=3)+ 
-            #         geom_vline(aes(xintercept=0.05),linetype="dashed")+
-            #         annotate("text", x=0.06, y=40, label="0.05", angle=90,size=3)+ 
-            #         geom_vline(aes(xintercept=0.1),linetype="dashed")+
-            #         annotate("text", x=0.11, y=20, label="0.1", angle=90,size=3) + ylab("count")+ xlab("p-value") 
-
-            #     #Omega_NK_all <- read.csv("Data/Omega_NK_damage_function_sq_FINAL.csv")
-            #     glimpse(Omega_NK_all)
-            #     Omega_NK_all$iso <- countrycode(Omega_NK_all$iso3,origin="iso3c",destination="iso2c")
-
-
-            #     Omega_NK_all$id <- paste0(Omega_NK_all$iso,Omega_NK_all$NK_type)
-            #     Omega_NK$id <- paste0(Omega_NK$country,Omega_NK$NK_type)
-            #     Omega_NK<-merge(Omega_NK,Omega_NK_all[,which(names(Omega_NK_all) %in% c("id","Omega_NK_T2coeff"))],by="id",all.x=TRUE)
-            #     glimpse(Omega_NK)
-
-            #     Omega_NK$Change_coeff <- Omega_NK$Omega_NK_c2/Omega_NK$Omega_NK_T2coeff
-
-            #     ggplot(Omega_NK)+
-            #     geom_point(aes(x=Omega_NK_c2,y=Change_coeff,color=DGVM))+ylim(-10,10)
-
-            #     Omega_NK_dgvms_mean <- aggregate(Omega_NK_c2~id,data=Omega_NK,FUN="mean")
-            #     glimpse(Omega_NK_dgvms_mean)
-            #     Omega_NK<-merge(Omega_NK,Omega_NK_dgvms_mean,by="id",all.x=TRUE)
-            #     glimpse(Omega_NK)
-
-            #     Omega_NK$Change_Mean_All <- Omega_NK$Omega_NK_c2.y / Omega_NK$Omega_NK_T2coeff
-
-            #     ggplot(Omega_NK)+
-            #     geom_point(aes(x=Omega_NK_T2coeff,y=Omega_NK$Omega_NK_c2.y))+#+ylim(-10,10)+
-            #     xlab("Coefficient using all data")+ylab("Mean of three coefficients")+theme_bw()
-
-            #     ggsave("Figures/ComparisonCoefficients.png",dpi=300)
-
-            # #DGVM one by one
-
+      
          
-            results_df <- read.csv("Data/Damage_coef.csv")
             glimpse(results_df)
             levels(factor(results_df$formula))
             
@@ -2999,53 +2126,12 @@
             ggarrange(pvalm,pvaln,common.legend=TRUE,nrow=2,legend="bottom")
             
 
-
-            # Omega_NK$iso3 <- countrycode(Omega_NK$country, origin="iso2c",destination="iso3c")
-            # save(file="Data/Omega_NK_raw_final.Rda",Omega_NK)
-
-            # load("Data/Omega_NK_raw_final.Rda")
-            # glimpse(Omega_NK)
-
-            # ggplot(Omega_NK[which(Omega_NK$Function%in%c("Log","Sq")),],aes(Omega_NK_rsq))+
-            # geom_density(aes(color=Function))+
-            # geom_vline(aes(xintercept=mean(Omega_NK$Omega_NK_rsq[which(Omega_NK$Function%in%c("Log"))], na.rm=T)),   # Ignore NA values for mean
-            #    color="darkred", size=1,linetype="dashed")+
-            # geom_vline(aes(xintercept=mean(Omega_NK$Omega_NK_rsq[which(Omega_NK$Function%in%c("Sq"))], na.rm=T)),   # Ignore NA values for mean
-            #    color="cyan", size=1,linetype="dashed") + theme_bw()+xlab("Adjusted R-squared")
-
-
-            #    mean(Omega_NK$Omega_NK_rsq[which(Omega_NK$Function%in%c("Log"))], na.rm=T)
-            #    mean(Omega_NK$Omega_NK_rsq[which(Omega_NK$Function%in%c("Sq"))], na.rm=T)
-
-          
-           
-
-            # pvalm <- ggplot(Omega_NK[which(Omega_NK$Function=="Log"&Omega_NK$NK_type=="Market"),], aes(Omega_NK_c2_pval)) +
-            # geom_histogram(fill="indianred",breaks=c(0,0.01,0.05,0.1,(0.1+seq(1:90)*0.01)))+
-            # theme_bw() + ggtitle("Market NC damage function coefficient")+ xlab ("") + 
-            # geom_vline(aes(xintercept=0.01),linetype="dashed")+xlim(0,1)+
-            # annotate("text", x=0.02, y=50, label="0.01", angle=90,size=3)+ 
-            # geom_vline(aes(xintercept=0.05),linetype="dashed")+
-            # annotate("text", x=0.06, y=40, label="0.05", angle=90,size=3)+ 
-            # geom_vline(aes(xintercept=0.1),linetype="dashed")+
-            # annotate("text", x=0.11, y=20, label="0.1", angle=90,size=3) + ylab("count")+ xlab("p-value")
-
-            # pvaln <- ggplot(Omega_NK[which(Omega_NK$Function=="Log"&Omega_NK$NK_type=="NonMarket"),], aes(Omega_NK_c2_pval)) +
-            # geom_histogram(fill="darkcyan",breaks=c(0,0.01,0.05,0.1,(0.1+seq(1:90)*0.01)))+
-            # theme_bw() + ggtitle("Non-market NC damage function coefficient")+ xlab ("") + 
-            # geom_vline(aes(xintercept=0.01),linetype="dashed")+xlim(0,1)+
-            # annotate("text", x=0.02, y=50, label="0.01", angle=90,size=3)+ 
-            # geom_vline(aes(xintercept=0.05),linetype="dashed")+
-            # annotate("text", x=0.06, y=40, label="0.05", angle=90,size=3)+ 
-            # geom_vline(aes(xintercept=0.1),linetype="dashed")+
-            # annotate("text", x=0.11, y=20, label="0.1", angle=90,size=3) + ylab("count")+ xlab("p-value")
-
-            # ggarrange(pvalm,pvaln,nrow=2)
             
-            ggsave("Figures/pval_estimates_Lin.png",dpi=300)
+            ggsave("Figures/Final Figures/Submission 3/pval_estimates_Lin.png",dpi=300)
 
        
 
+            glimpse(wealth2018)
             w2018 <- data.frame(iso3=wealth2018$countrycode,K=wealth2018$K, 
                     TotalWealth=wealth2018$TotalWealth, 
                     NK_Market=wealth2018$NforestT,
@@ -3053,7 +2139,99 @@
                     glimpse(w2018)
             write.csv(w2018,file="Data/w2018.csv")
 
+            glimpse(world)
+            glimpse(results_df)
+            
+            results_df[which(results_df$country=="RU" & results_df$formula=="lin"),]
+            
+            map_coef <- merge(results_df,world,by.x="country",by.y="iso_a2",all.x=TRUE)
+            glimpse(map_coef)
+            
+            pal <- palette(brewer.pal(n = 3, name = "Spectral"))
+            library(scales)
+            
+            cmn <- map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="lpj"),]
 
+
+            Map_MarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="lpj" & map_coef$capital=="mN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Market NC damage coefficient")
+
+            Map_NonmarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="lpj",map_coef$capital=="nN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Non-market NC damage coefficient")
+            ggarrange(Map_MarketDam,Map_NonmarketDam)
+            ggsave("Figures/Final figures/Submission 3/Map_LPJ.png",dpi=600)
+
+            Map_MarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="all" & map_coef$capital=="mN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Market NC damage coefficient")
+
+            Map_NonmarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="all",map_coef$capital=="nN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Non-market NC damage coefficient")
+            ggarrange(Map_MarketDam,Map_NonmarketDam)
+            ggsave("Figures/Final figures/Submission 3/Map_all.png",dpi=600)
+
+            Map_MarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="car" & map_coef$capital=="mN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Market NC damage coefficient")
+
+            Map_NonmarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="car",map_coef$capital=="nN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Non-market NC damage coefficient")
+            ggarrange(Map_MarketDam,Map_NonmarketDam)
+            ggsave("Figures/Final figures/Submission 3/Map_car.png",dpi=600)
+
+            Map_MarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="orc" & map_coef$capital=="mN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Market NC damage coefficient")
+
+            Map_NonmarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="orc",map_coef$capital=="nN"   ),]) +
+                theme_void()+
+                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(aes(geometry = geom, fill =100* coef)) +
+                scale_fill_gradientn(colours = pal,limits=c(-010,010),
+                    na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
+                theme(legend.position = "bottom",plot.title = element_text(hjust = 0.5)) +
+                ggtitle("Non-market NC damage coefficient")
+            ggarrange(Map_MarketDam,Map_NonmarketDam)
+            ggsave("Figures/Final figures/Submission 3/Map_orc.png",dpi=600)
 
 
 
