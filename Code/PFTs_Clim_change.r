@@ -209,19 +209,23 @@
     minlim <-min(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
     maxlim <-max(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
     
+    glimpse(ww)
     ggplot(ww[which(ww$year==2018),],aes(x=nN*100,y=mN*100))+
     theme_bw() +
     #geom_abline(intercept = 0, slope = 1)+
     geom_density_2d_filled(contour_var = "ndensity",aes(fill=r5,alpha=..level..),bins=4,size=1)+
     scale_alpha_discrete(range = c(0,0.9,1,1),guide = guide_none()) +
-    geom_point(aes(x=100*nN,y=100*mN,size=log(GDP)),alpha=0.5)+
+    #geom_point(aes(x=100*nN,y=100*mN,size=log(GDP)),alpha=0.5)+
+    geom_point(aes(x=100*nN,y=100*mN,size=GDP/Population),alpha=0.5)+
     #coord_cartesian(xlim = c(minlim,maxlim),ylim = c(minlim,maxlim))+
     scale_y_continuous(trans="log2",labels=scaleFUN)+
     scale_x_continuous(trans="log2",labels=scaleFUN)+
         xlab("Non-market natural capital \n(% of Total Wealth)") + 
         ylab("Market natural capital \n(% of Total Wealth)") + 
         scale_fill_discrete(name="Region")+
-        scale_size_continuous(name="Log GDP \nin 2018")
+        #scale_size_continuous(name="Log GDP \nin 2018")
+        scale_size_continuous(name="GDP per \ncapita in 2018")
+        
         ggsave("Figures/Final Figures/Submission 3/F1_NatCap_R5.png",dpi=600)
 
 ## Plot Figure 1 (END)
@@ -1898,6 +1902,8 @@
                     ES_val_lpj3 <- aggregate(TotalValES~PFT_code+r5,data= val_lpj, FUN="sum")
                     ES_val_lpj4<- aggregate(TotalValGDP~PFT_code+r5,data= val_lpj, FUN="sum")
                     ES_val_lpj5 <- merge(ES_val_lpj3,ES_val_lpj4,by=c("PFT_code","r5"),all=TRUE)
+                    GDPr5 <- aggregate(GDP~r5,data= val_lpj, FUN="mean")
+
                     names(GDPr5)[1]<-"r5"
                     names(GDPr5)[2]<-"GDP"
                     #glimpse(ES_val_lpj5)
@@ -1916,7 +1922,7 @@
                     ESValplot <-  ggplot(ES_val_lpj5,aes(x=region_un,y=100*TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
                                     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
-                                guides(fill = guide_legend(reverse=FALSE)) 
+                                guides(fill = guide_legend(reverse=FALSE)) + ylim(c(0,26))
                     ESValplot 
                     ES_val_lpj6 <- ES_val_lpj5
                     ES_val_lpj6$region_un <- factor(ES_val_lpj5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
@@ -1924,9 +1930,9 @@
                     GDPValplot <-  ggplot(ES_val_lpj6,aes(x=region_un,y=100*TotalValGDP_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
                                     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
-                                guides(fill = guide_legend(reverse=FALSE)) 
+                                guides(fill = guide_legend(reverse=FALSE)) + ylim(c(0,26))
                     GDPValplot 
-                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
+                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none") #here
                     #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_lpj.png",dpi=600)
                 ##
 

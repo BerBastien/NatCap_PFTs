@@ -2,6 +2,7 @@
 
     x <- c('arrow','raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth")
     lapply(x, require, character.only = TRUE)
+    '%notin%' <- Negate('%in%')
     
     setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
     
@@ -48,6 +49,25 @@
     
  
     GR_Results<-merge(GR_Results,n_NPV,by="n",all=TRUE)
+
+    GR_Results$disc_GDP <- GR_Results$dr * GR_Results$YGROSS_baseline
+
+    isos <- levels(factor(GR_Results$n))
+    for(i in 1:length(isos)){
+      GR_d <- data.frame(approx(GR_Results$year[which(GR_Results$n==isos[i])],GR_Results$disc_GDP[which(GR_Results$n==isos[i])],n=57*5+1),n=isos[i])
+      n_npv<-data.frame(n=isos[i],NPV=sum(GR_d$y[which(GR_d$x>2019)]))
+      if(i==1){
+        n_NPV <- n_npv
+      }else{
+        n_NPV <- rbind(n_NPV,n_npv)
+      }
+
+    }
+    names(n_NPV)[2] <- "NPV_GDP"
+    
+    
+ 
+    GR_Results<-merge(GR_Results,n_NPV,by="n",all=TRUE)
     
     GR_Results$r5 <- factor(GR_Results$r5)
     levels(GR_Results$r5) <- c("ASIA","LAM","MAF","OECD","REF")
@@ -60,6 +80,16 @@
     100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="REF")] )/sum(GR_Results$YGROSS2020[which(GR_Results$t==18  & GR_Results$r5=="REF")])
     100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="ASIA")] )/sum(GR_Results$YGROSS2020[which(GR_Results$t==18  & GR_Results$r5=="ASIA")])
 
+    glimpse(GR_Results)
+    
+
+    100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="MAF")] )/sum(GR_Results$NPV_GDP[which(GR_Results$t==18 & GR_Results$r5=="MAF")] )
+    100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="OECD")] )/sum(GR_Results$NPV_GDP[which(GR_Results$t==18 & GR_Results$r5=="OECD")] )
+    100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="LAM")] )/sum(GR_Results$NPV_GDP[which(GR_Results$t==18 & GR_Results$r5=="LAM")] )
+    100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="REF")] )/sum(GR_Results$NPV_GDP[which(GR_Results$t==18 & GR_Results$r5=="REF")] )
+    100*sum(GR_Results$NPV[which(GR_Results$t==18 & GR_Results$r5=="ASIA")] )/sum(GR_Results$NPV_GDP[which(GR_Results$t==18 & GR_Results$r5=="ASIA")] )
+
+   
 
     GR_Results$NPV_perc <- 100*GR_Results$NPV/GR_Results$YGROSS2020
     
@@ -139,7 +169,7 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
        geom_point(aes(x=log(YGROSS2020/pop2020),y=ES_change,color=r5))+theme_bw() + 
        geom_smooth(data=GR_Results[which(GR_Results$t==18),],
      aes(x=log(YGROSS2020/pop2020),y=ES_change),formula="y~x",method="lm")+
-     ylab("Ecosystem services  \nchange in 2100 (%)")+
+     ylab("Non-market benefits  \nchange in 2100 (%)")+
      geom_hline(aes(yintercept=0),linetype="dashed")+
      xlab("Log GDP per capita in 2020")+ 
      guides(color=guide_legend(title="Region"))
@@ -196,7 +226,10 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
     weighted_var_gdp <- sum(w * (x_gdp - pop_mean_gdp_lpj)^2) / sum(w)
     pop_se_gdp_lpj <- sqrt(weighted_var_gdp)
 
-    install.packages("ggbreak")
+    aggdp <-aggregate(GDP_change_perc~n+r5,data=GR_Results,FUN="sum")
+    aggregate(GDP_change_perc~r5,data=aggdp,FUN="mean")
+
+    #install.packages("ggbreak")
     library(ggbreak) 
     
     glimpse(GR_Results)
@@ -226,13 +259,13 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
        labs(color="Region",shape="Year")+
        ylab("Annual GDP change (%)\n") + ggtitle("")  +
        #scale_y_break(c(-0.6, 0.1))+
-       coord_cartesian(xlim=c(-45,10),ylim=c(-0.6, 0.1)) +
-       xlab("Annual ecosystem services change (%)")
+       #coord_cartesian(xlim=c(-45,10),ylim=c(-0.6, 0.1)) +
+       xlab("Annual non-market benefits change (%)")
   
        
        
        plot_trajectory
-       ggarrange(plot_trajectory,results2100lpj,ncol=1,heights=c(3,1))
+       #ggarrange(plot_trajectory,results2100lpj,ncol=1,heights=c(3,1))
        #ggsave("Figures/Final figures/Submission 3/Results_noS.png",dpi=600)
 
 
@@ -244,12 +277,13 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
 
     all_simmax <- GR_Results[GR_Results$countrymax %in% maxyear$countrymax,]
     
-    plot_count_es <- ggplot(GR_Results[which(GR_Results$year==2100),], # & abs(all_sim_mean$es_change)>0.01
-        aes(x=es_change*100,fill=Continent))+
-        xlim(c(-45,10))+
-        geom_histogram()+theme_minimal()+ xlab("")+ylab("count in 2100") #+xlim(-12,5)#+ xlim(-100,60)
-
-        ordered_GR <- GR_Results[which(GR_Results$year==2100),]
+    # plot_count_es <- ggplot(GR_Results[which(GR_Results$year==2100),], # & abs(all_sim_mean$es_change)>0.01
+    #     aes(x=es_change*100,fill=Continent))+
+    #     xlim(c(-45,10))+
+    #     geom_histogram()+theme_minimal()+ xlab("")+ylab("count in 2100") #+xlim(-12,5)#+ xlim(-100,60)
+    # plot_count_es
+        
+    ordered_GR <- GR_Results[which(GR_Results$year==2100),]
     ordered_GR <- ordered_GR[order(ordered_GR$ES_change),]
 
     totpop <- sum(GR_Results$pop[which(GR_Results$year==2100)])
@@ -262,6 +296,32 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
         xlim(c(-45,10))+
         theme_minimal()+ ylab("Cumulative \npopulation in 2100 (%)")+xlab('')
     plot_count_es
+
+
+    ordered_GR <- GR_Results[which(GR_Results$year==2100),]
+    glimpse(ordered_GR)
+    #ordered_GR$GDPpc <- ordered_GR$YGROSS_baseline/ordered_GR$pop
+    ordered_GR$GDPpc <- ordered_GR$YGROSS2020*10^6/ordered_GR$pop2020
+    ordered_GR <- ordered_GR[order(ordered_GR$GDPpc),]
+
+    totGDP_change <- sum(GR_Results$GDP_change[which(GR_Results$year==2100)])
+    ordered_GR$cumdam <- cumsum(100*ordered_GR$GDP_change/totGDP_change)
+
+    plot_distribution_damages <- ggplot(ordered_GR, #& abs(all_sim_mean$gdp_change)>0.01
+        aes(x=(GDPpc),y=cumdam))+
+        #geom_bar(stat="identity")+
+        geom_line(color="gray")+
+        geom_point(aes(color=r5),shape=15)+
+        #geom_vline(aes(xintercept=0.0815))+
+        #geom_hline(aes(yintercept=90),linetype="dashed")+
+        geom_vline(aes(xintercept=18668.173))+
+        geom_hline(aes(yintercept=88.74806),linetype="dashed")+
+        #xlim(c(-45,10))+
+        labs(color="Region")+
+        theme_minimal()+ ylab("Cumulative global GDP \ndamages in 2100 (% of total)")+xlab('GDP per capita in 2020 ($ per person)')
+    plot_distribution_damages
+    #ggsave("Figures/Final figures/Submission 3/Distribution_damages.png",dpi=600)
+
 
     plot_count_gdp <- ggplot(GR_Results[which(GR_Results$year==2100),], #& abs(all_sim_mean$gdp_change)>0.01
         aes(x=gdp_change*100,fill=Continent))+xlab('')+#xlim(-15,6)+
@@ -289,6 +349,7 @@ plot_count_gdp_cum <- ggplot(ordered_GR, #& abs(all_sim_mean$gdp_change)>0.01
     geom_line(color="gray")+
     geom_point(aes(color=r5),shape=15)+
     xlim(c(-0.65,0.1))+ 
+    #xlim(c(-2.8,0))+ 
     theme_bw() + coord_flip() + ylab("Cumulative\npopulation \nin 2100 (%)")+
     theme_minimal()+xlab('')
 
@@ -303,16 +364,16 @@ plot_count_gdp_cum
     traj_plot <- ggarrange(ggarrange(plot_trajectory, plot_count_gdp_cum,nrow=1,ncol=2,widths=c(3,1),legend="none",align="hv"),
         ggarrange(plot_count_es,emptyplot,nrow=1,ncol=2,widths=c(3,1),common.legend=TRUE,align="hv",legend="bottom"),
         ncol=1,nrow=2,common.legend=TRUE,heights=c(3,1),legend="bottom",align="hv")
-    
-    annotate_figure(traj_plot, top = text_grob("Ecosystem Benefits change under RCP6.0", 
-                face = "bold", size = 14))
-    #ggsave("Figures/Trajectory_completeHist.png",dpi=300)
+  
 
      ggarrange(ggarrange(plot_trajectory, plot_count_gdp_cum,nrow=1,ncol=2,widths=c(3,1),legend="none",align="hv"),
         ggarrange(plot_count_es,emptyplot,nrow=1,ncol=2,widths=c(3,1),common.legend=TRUE,align="hv",legend="none"),as_ggplot(leg_trj),
         ncol=1,nrow=3,common.legend=TRUE,heights=c(4,1,1),legend="none",align="hv")
 
         #ggsave("Figures/Final figures/Submission 3/Trajectory_percent_noS.png",dpi=600)
-
+        #ggsave("Figures/Final figures/Submission 3/Fig4_pre.png",dpi=600)
+    #ggarrange(plot_trajectory, results2100lpj_noS,ncol=1,heights=c(3,1))
+    #ggsave("Figures/Final figures/Submission 3/Trajectory_percent_noS.png",dpi=600)
+    
     trajlpj <- plot_trajectory+geom_text(data = GR_Results[which(GR_Results$year %in% c(2100) ),],   aes(x=ES_change,y=GDP_change_perc,color=r5,label=n))
         trajlpj
