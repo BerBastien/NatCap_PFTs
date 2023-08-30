@@ -1,12 +1,12 @@
 #setup#
 
+    
+    dir1 <- "C:/Users/basti/Box/VegetationData/"
+    setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
     x <- c('raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth")
     lapply(x, require, character.only = TRUE)
-    setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
-    dir1 <- "C:/Users/basti/Box/VegetationData/"
     isos <- world$iso_a2
 
-    library(RColorBrewer)
     my.palette <- brewer.pal(n = 10, name = "BrBG")
     `%notin%` <- Negate(`%in%`)
 
@@ -71,7 +71,6 @@
         
         wealth <- merge(Wealth,Gdp, by = c("countrycode","year"),all=TRUE)
         wealth <- wealth[-c(which(wealth[,1]=="")),] #no data in these rows
-        glimpse(wealth)
         wealth$GDP <- as.numeric(as.character(wealth$GDP)) * 1.06 #converting 2015 to 2018 usd
         colnames(wealth)[3] <- "countryname"
         
@@ -94,10 +93,7 @@
         }
         wealth_data <- merge(wealth,Population,all=TRUE,by=c("countrycode","year"))
         wdata_1995_2018 <- wealth_data
-        glimpse(Population[Population$countrycode=="RUS",])
-        glimpse(wealth_data[wealth_data$countrycode=="RUS",])
-        glimpse(wealth_data[wealth_data$countrycode=="CHN",])
-
+        
         wealth_data$H <- as.numeric(as.character(wealth_data$H))
         wealth_data$K <- as.numeric(as.character(wealth_data$K))
         wealth_data$N <- as.numeric(as.character(wealth_data$N))
@@ -119,7 +115,6 @@
         
         colnames(Natrents) <- c("countryname", "countrycode", "seriesname","seriescode",1995:2018)
         years <- c(1995:2018)
-        Natrents$countrycode
         
         for (i in 1:length(years)){
             yeari <- years[i]
@@ -137,7 +132,7 @@
         
         wealth_data <- merge(wealth_data,Natrents2, by = c("countrycode","year"),all.x=TRUE)
         wealth_data$NatRents <- as.numeric(as.character(wealth_data$NatRents))
-        save(file="Data/wealth_data.Rda",wealth_data)
+        #save(file="Data/wealth_data.Rda",wealth_data)
 
         r5 <- read.csv("Data/r5regions.csv")
         names(r5)<-c("r5","countrycode")
@@ -164,18 +159,15 @@
         w2 <- merge(wealth_data,Npa_year,by="year")        
         w2 <- merge(w2,NES_year,by="year")
         w2$Global_nN <- w2$Total_Npa + w2$Total_NES
-        glimpse(w2)
         w2 <- w2[which(w2$r5!=""),]
         modelCD <- felm(log(GDP)~log(K)+log(NforestT)+log(H)+log(Global_nN):r5+year|countrycode+r5|0|0,data=w2[which(w2$NforestT>0&w2$GDP>0),])
         
-        summary(modelCD)
 
         table_coefficients <- w2[which(w2$year==2018),]
         table_coefficients$mN <-table_coefficients$NforestT
         table_coefficients$nN <- table_coefficients$NforestES + table_coefficients$Npa
         table_coefficients <- table_coefficients[,which(names(table_coefficients) %in% c("mN","nN","NatRents","countrycode"))]
         dam <- read.csv("Data/Damage_coef.csv")
-        glimpse(dam)
         dam2 <- dam[which(dam$formula=="lin" & dam$dgvm=="lpj" & dam$capital=="mN"),]
         dam2 <- dam2[,which(names(dam2) %in% c("coef","iso3","pval"))]
         glimpse(table_coefficients)
@@ -195,29 +187,19 @@
         names(table_coefficients)[2] <- "gamma_3"
         table_coefficients$gamma_3 <- table_coefficients$gamma_3*0.01
 
-        write.csv(table_coefficients,"Data/table_coefficients.csv")
+        #write.csv(table_coefficients,"Data/table_coefficients.csv")
+        save(ww,file="Data/DataForFigures/ww.Rds")
 
   
 
 #READ WORLD BANK DATA (end)
 
 ## Plot Figure 1 (start)
-
-    levels(factor(ww$r5))
-    scaleFUN <- function(x) sprintf("%.4f", x)
-    
-    minlim <-min(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
-    maxlim <-max(ww$nN[which(ww$year==2018)],ww$mN[which(ww$year==2018)])*100
-    
-    glimpse(ww)
     ggplot(ww[which(ww$year==2018),],aes(x=nN*100,y=mN*100))+
     theme_bw() +
-    #geom_abline(intercept = 0, slope = 1)+
     geom_density_2d_filled(contour_var = "ndensity",aes(fill=r5,alpha=..level..),bins=4,size=1)+
     scale_alpha_discrete(range = c(0,0.9,1,1),guide = guide_none()) +
-    #geom_point(aes(x=100*nN,y=100*mN,size=log(GDP)),alpha=0.5)+
     geom_point(aes(x=100*nN,y=100*mN,size=GDP/Population),alpha=0.5)+
-    #coord_cartesian(xlim = c(minlim,maxlim),ylim = c(minlim,maxlim))+
     scale_y_continuous(trans="log2",labels=scaleFUN)+
     scale_x_continuous(trans="log2",labels=scaleFUN)+
         xlab("Non-market natural capital \n(% of Total Wealth)") + 
@@ -226,7 +208,7 @@
         #scale_size_continuous(name="Log GDP \nin 2018")
         scale_size_continuous(name="GDP per \ncapita in 2018")
         
-        ggsave("Figures/Final Figures/Submission 3/F1_NatCap_R5.png",dpi=600)
+    #ggsave("Figures/Final Figures/Submission 3/F1_NatCap_R5.png",dpi=600)
 
 ## Plot Figure 1 (END)
 
@@ -524,19 +506,16 @@
 
     df_biome2 <- df_biome_area_change
     df_biome2  <- aggregate(area_initial ~ decade + scen + dgvms_model + gcm_model + soc_scen, data = df_biome2, sum)
-    glimpse(df_biome2)
-
+    
     df_tas$id <- paste0(df_tas$gcm_model,df_tas$decade,df_tas$scen)
 
 
 
     df_biome$id <- paste0(df_biome$gcm_model,df_biome$decade,df_biome$scen)
-    glimpse(df_tas)
-
+    
 
     df_biome <- merge(df_biome,df_tas[,which(names(df_tas)%in%c("dif_t","id"))],all=FALSE)
-    glimpse(df_biome)
-
+    
 
     df_biome <- cbind(df_biome,df_biome2$area_initial)
     names(df_biome)[9] <- "area_initial"
@@ -558,7 +537,6 @@
 
 
     model1 <- felm(dif_biome_area ~ 0+ dif_t + I(dif_t^2) + scen + soc_scen + gcm_model + dgvms_model| 0  | 0 | 0  , data=df_biome)
-    summary(model1)
     df_estimates <- sqest(df_biome,model1,"dif_t","all")
 
     ggplot(df_estimates,aes(x=temp,y=gestimated,color=exp))+
@@ -606,7 +584,7 @@
         pft_file_names <- discard_pattern(pft_file_names,c("rcp60soc"))
         pft_file_names <- discard_pattern(pft_file_names,c("rcp26soc"))
         pft_file_names <- keep_pattern(pft_file_names,c("dif"))
-        pft_file_names <- keep_pattern(pft_file_names,c("car"))
+        pft_file_names <- keep_pattern(pft_file_names,c("orc"))
         temp_levels <- c(2)
         for (temp_levels_i in 1:length(temp_levels)){
         first <- 1
@@ -668,23 +646,23 @@
         }
 
 
-            
 
             pft_sum_poly_rob4 <- 
             raster::subset(pft_change_2C,1) %>% 
             raster::rasterToPolygons() %>% 
             sf::st_as_sf() 
+            pft_sum_poly_rob4_orc <- pft_sum_poly_rob4
+            save(pft_sum_poly_rob4_orc,file="Data/DataForFigures/pft_sum_poly_rob4_orc.Rds")
             
             
             world_coast <- ne_coastline(scale = "medium", returnclass = "sf")
             
-            library(wesanderson)
             pal <- palette(brewer.pal(n = 3, name = "Spectral"))
 
             
             d_area <- ggplot() +
             theme_void() +
-            geom_sf(data = pft_sum_poly_rob4,aes(fill = 10000*layer), color = NA) +
+            geom_sf(data = pft_sum_poly_rob4,aes(fill = 100*layer), color = NA) +
             geom_sf(data = world_coast)+
             scale_fill_gradientn(colours = pal,limits=c(-10,10),na.value="transparent",name="Land cover change (%)", labels=c("<-10","-05","0","05",">10"),oob = scales::squish)+
             geom_sf(data = world_coast)+
@@ -787,6 +765,10 @@
             raster::subset(cveg_change_2C,1) %>% 
             raster::rasterToPolygons() %>% 
             sf::st_as_sf() 
+
+            
+            cveg_sum_poly_rob4_orc <- cveg_sum_poly_rob4
+            save(cveg_sum_poly_rob4_orc,file="Data/DataForFigures/cveg_sum_poly_rob4_orc.Rds")
             
             dcveg <- ggplot() +
             theme_void() +
@@ -920,21 +902,20 @@
         #save(a_h,file="Data/a_h_3dgvms.Rda")
 
         
-        load("Data/a_h.Rda")
-
+        load("Data/a_h_3dgvms.Rda")
+        glimpse(a_h)
        
 
         sw <- as_Spatial(st_cast(world))
         raster_isos <- raster::rasterize(sw[1],v1)
         isos_xy <- as.data.frame(raster_isos, xy=TRUE)
         names(isos_xy)[3] <- "countrycode"
-        glimpse(isos_xy)
         isos_xy$xy <- paste0(isos_xy$x,isos_xy$y)
         area <- as.data.frame(area(raster_isos), xy=TRUE)   
-        glimpse(area)
         isos_xy$area <- area[,3]
 
         a_h$xy <- paste0(a_h$x,a_h$y)
+
 
         a_lpj_2005soc_present <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="lpj"& a_h$h=="Present"),]
         a_lpj_2005soc_present$Latitude <- abs(a_lpj_2005soc_present$y)
@@ -975,12 +956,14 @@
                     pal_trop <- colorRampPalette(brewer.pal(4, "Greens"))
 
 
+        #save(PFTs11_horizons3,file="Data/DataForFigures/PFTs11_horizons3.Rds")
         Present_dist_col <- ggplot(PFTs11_horizons3)+
             geom_col(aes(y,Percent*100,fill=PFT))+
             scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
             #scale_fill_brewer(palette = "Paired") +
             theme_minimal() + xlab("Latitude (Degrees)") + ylab("Average pixel cover (%)")+
             ggtitle("Present") + guides(fill=guide_legend(title="Biome")) + coord_flip()
+        Present_dist_col
 
 
         a_lpj_2005soc_2c <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="lpj"& a_h$h=="2C"),]
@@ -1023,6 +1006,7 @@
         geom_smooth(aes(x=y2C,y=Future_Change))
 
 
+        #save(PFT_change,"Data/DataForFigures/PFT_change.Rds")
             pft_mov_change <- ggplot(PFT_change)+
             geom_col(aes(yPresent,Future_Change*100,fill=PFT2C))+
             geom_hline(yintercept=0)+
@@ -1034,10 +1018,12 @@
             guides(fill=guide_legend(title="Biome"))+
             coord_flip()
 
+            pft_mov_change
+
             
 
             ggarrange(Present_dist_col,pft_mov_change,ncol=2,nrow=1,common.legend=TRUE,legend="right")
-            ggsave("Figures/Latitudinal_Distribution.png",dpi=600)
+            #ggsave("Figures/Latitudinal_Distribution.png",dpi=600)
         
         a_orc_2005soc_present <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="orc"& a_h$h=="Present"),]
         a_orc_2005soc_present$Latitude <- abs(a_orc_2005soc_present$y)
@@ -1079,13 +1065,16 @@
                     pal_trop <- colorRampPalette(brewer.pal(4, "Greens"))
 
 
-        Present_dist_col <- ggplot(PFTs11_horizons3)+
+        PFTs11_horizons3_orc <- PFTs11_horizons3
+        #save(PFTs11_horizons3_orc,file="Data/DataForFigures/PFTs11_horizons3_orc.Rds")
+        
+        Present_dist_col <- ggplot(PFTs11_horizons3_orc)+
             geom_col(aes(y,Percent*100,fill=PFT))+
             scale_fill_manual(values = c(pal_boreal(3),pal_temp(4), pal_trop(3)))+
             #scale_fill_brewer(palette = "Paired") +
             theme_minimal() + xlab("Latitude (Degrees)") + ylab("Average pixel cover (%)")+
             ggtitle("Present (ORCHEED)") + guides(fill=guide_legend(title="Biome")) + coord_flip()
-
+        Present_dist_col
 
         a_orc_2005soc_2c <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="orc"& a_h$h=="2C"),]
         glimpse(a_orc_2005soc_2c)
@@ -1127,8 +1116,10 @@
         ggplot(total_change)+
         geom_smooth(aes(x=y2C,y=Future_Change))
 
-
-            pft_mov_change <- ggplot(PFT_change)+
+        PFT_change_orc <- PFT_change
+        save(PFT_change_orc,file="Data/DataForFigures/PFT_change_orc.Rds")
+            
+            pft_mov_change <- ggplot(PFT_change_orc)+
             geom_col(aes(yPresent,Future_Change*100,fill=PFT2C))+
             geom_hline(yintercept=0)+
             ggtitle("2 Degrees Warming (ORCHEED)")+
@@ -1141,6 +1132,7 @@
             guides(fill=guide_legend(title="Biome"))+
             #geom_smooth(aes(x=y2C,y=Future_Change*100*10),se=F,color="black") + 
             coord_flip()
+            pft_mov_change
 
             
 
@@ -1148,17 +1140,18 @@
             ggsave("Figures/Latitudinal_Distribution_orcheed.png",dpi=600)
 
 
-                a_car_2005soc_present <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="car"& a_h$horizon=="Present"),]
+        
+        
+        levels(factor(a_h$DGVM))
+        
+        a_car_2005soc_present <- a_h[which(a_h$soc=="2005soc" & a_h$DGVM=="car"& a_h$horizon=="Present"),]
+        
+        
         a_car_2005soc_present$Latitude <- abs(a_car_2005soc_present$y)
         
         a_car_2005soc_present <- a_car_2005soc_present %>%
             mutate(dominant_pft=fct_reorder(.f = dominant_pft, .x = Latitude, .fun = mean))
             glimpse(a_car_2005soc_present)
-
-
-            head(a_car_2005soc_present)
-                
-
        
         a_car_2005soc_present$PFT <- factor(a_car_2005soc_present$PFT)
         levels(a_car_2005soc_present$PFT)
@@ -1184,13 +1177,15 @@
                     pal_temp <- colorRampPalette(brewer.pal(4, "RdPu"))
                     pal_trop <- colorRampPalette(brewer.pal(4, "Greens"))
 
-
+        PFTs11_horizons3_car <- PFTs11_horizons3
+        save(PFTs11_horizons3_car,file="Data/DataForFigures/PFTs11_horizons3_car.Rds")
         Present_dist_col <- ggplot(PFTs11_horizons3)+
             geom_col(aes(y,Percent*100/2,fill=PFT))+
             scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
             #scale_fill_brewer(palette = "Paired") +
             theme_minimal() + xlab("Latitude (Degrees)") + ylab("Average pixel cover (%)")+
             ggtitle("Present (CARAIB)") + guides(fill=guide_legend(title="Biome")) + coord_flip()
+        Present_dist_col
       
 
 
@@ -1205,6 +1200,7 @@
         PFTs11_horizons3_2c$ID <- paste0(PFTs11_horizons3_2c$PFT,PFTs11_horizons3_2c$y)
 
         PFT_change <- merge(PFTs11_horizons3,PFTs11_horizons3_2c,by="ID",all=TRUE,suffixes=c("Present","2C"))
+         
          twoc_dist_col <- ggplot(PFTs11_horizons3_2c)+
             geom_col(aes(y,Percent*100/2,fill=PFT))+
             scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
@@ -1226,8 +1222,10 @@
         "c4h","brevxs","sds","ndevtedtt","ndevtedttht","brevdtt",
         "brrgtrt","brevtrt","trs"))
 
-
-            pft_mov_change <- ggplot(PFT_change)+
+        PFT_change_car <- PFT_change
+        save(PFT_change_car,file="Data/DataForFigures/PFT_change_car.Rds")
+            
+            pft_mov_change <- ggplot(PFT_change_car)+
             geom_col(aes(yPresent,Future_Change*100,fill=PFT2C))+
             geom_hline(yintercept=0)+
             ggtitle("2 Degrees Warming (CARAIB)")+
@@ -1237,6 +1235,7 @@
             scale_fill_manual(values = c(pal_boreal(10),pal_temp(6), pal_trop(10)))+
             guides(fill=guide_legend(title="Biome"))+
             coord_flip()
+        pft_mov_change 
 
             
 
@@ -1401,7 +1400,7 @@
 
         # Read Database
             
-            es_ac_notFood <- read.csv("es_ac_notFood_id_05222023.csv")
+            es_ac_notFood <- read.csv("Data/es_ac_notFood_id_05222023.csv")
             dat<- es_ac_notFood
             glimpse(dat)
             hist(dat$logGDP)
@@ -1427,6 +1426,8 @@
 
             library(ggplot2)
 
+            elas_data <- dat 
+            save(elas_data,file="Data/DataForFigures/elas_data.Rds")
             # Create scatter plot with regression line
             elas_cveg <- ggplot(dat[which(dat$Cat2=="nonmarket" ),], aes(x = log(cveg), y = log(Single.Value.Converted))) +
             geom_point() +
@@ -1827,6 +1828,7 @@
                 geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=Type,middle=median((Benefits/100)))) +
                 theme_bw()+ coord_cartesian(xlim=c(0,200))
+                save(pft_es_lpj,file="Data/DataForFigures/pft_es_lpj.Rds")
                 #ggsave("Figures/Final Figures/Submission 3/ValperHa_LPJ_final_S3.png",dpi=600)
 
                 pft_es_car<- PFT_ES_all[which(PFT_ES_all$dgvm=="car"),]
@@ -1845,6 +1847,7 @@
                 geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=factor(Type),middle=mean((Benefits/100)))) +
                 theme_bw()+ coord_cartesian(xlim=c(0,50))
+                save(pft_es_car,file="Data/DataForFigures/pft_es_car.Rds")
                 #ggsave("Figures/Final Figures/Submission 3/ValperHa_CAR_final.png",dpi=600)
 
 
@@ -1862,6 +1865,8 @@
                 geom_boxplot(aes(x=(Benefits/100),y=Biome,
                     fill=factor(Type),middle=mean((Benefits/10)))) +
                 theme_bw()+ coord_cartesian(xlim=c(0,200))
+                
+                save(pft_es_orc,file="Data/DataForFigures/pft_es_orc.Rds")
                 #ggsave("Figures/Final Figures/Submission 3/ValperHa_ORC_final.png",dpi=600)
 
 
@@ -1923,6 +1928,7 @@
                                     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Ecosystem services")+
                                 guides(fill = guide_legend(reverse=FALSE)) + ylim(c(0,26))
+                    save(ES_val_lpj5,file="Data/DataForFigures/ES_val_lpj5.Rds")
                     ESValplot 
                     ES_val_lpj6 <- ES_val_lpj5
                     ES_val_lpj6$region_un <- factor(ES_val_lpj5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
@@ -1931,8 +1937,8 @@
                                     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
                                 guides(fill = guide_legend(reverse=FALSE)) + ylim(c(0,26))
-                    GDPValplot 
-                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none") #here
+                    save(ES_val_lpj6,file="Data/DataForFigures/ES_val_lpj6.Rds")
+                    ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
                     #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_lpj.png",dpi=600)
                 ##
 
@@ -1954,7 +1960,7 @@
                     ES_val_car5$TotalValES_gdp <- ES_val_car5$TotalValES/ES_val_car5$GDP
                     ES_val_car5$TotalValGDP_gdp <- ES_val_car5$TotalValGDP/ES_val_car5$GDP
                     
-                    ES_val_car$PFT_code <- factor(ES_val_car$PFT_code,levels=c("brsuas", "brsutecds","brevtecds","ndsutecdt","ndevtecdt","brsutecdt", "c3dh","c3hh","brsuteclt","ndevteclt",
+                    ES_val_car5$PFT_code <- factor(ES_val_car5$PFT_code,levels=c("brsuas", "brsutecds","brevtecds","ndsutecdt","ndevtecdt","brsutecdt", "c3dh","c3hh","brsuteclt","ndevteclt",
                     "brsutewmt","brsutewms","brevtewms","ndevstdit","ndsustswt","brevstdit","brevdttht",
                     "c4h","brevxs","sds","ndevtedtt","ndevtedttht","brevdtt",
                     "brrgtrt","brevtrt","trs"))
@@ -1971,6 +1977,7 @@
                                 guides(fill = guide_legend(reverse=FALSE)) 
                     ESValplot 
 
+                    #save(ES_val_car5,file="Data/DataForFigures/ES_val_car5.Rds")
                     ES_val_car6 <- ES_val_car5
                     ES_val_car6$region_un <- factor(ES_val_car5$region_un,levels=c("OECD","ASIA","REF","LAM",  "MAF" ))
                     
@@ -1979,6 +1986,8 @@
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
                                 guides(fill = guide_legend(reverse=FALSE)) 
                     GDPValplot 
+                    
+                    #save(ES_val_car6,file="Data/DataForFigures/ES_val_car6.Rds")
                     ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
                     #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_car.png",dpi=600)
                 # ##
@@ -2018,6 +2027,10 @@
                                     geom_bar(stat = "identity", width = .9) +theme_bw()+ xlab("") +ylab("") + ggtitle("Market Goods")+
                                 guides(fill = guide_legend(reverse=FALSE)) 
                     GDPValplot 
+                    
+                    save(ES_val_orc5,file="Data/DataForFigures/ES_val_orc5.Rds")
+                    save(ES_val_orc6,file="Data/DataForFigures/ES_val_orc6.Rds")
+                    
                     ggarrange(GDPValplot,ESValplot,common.legend=TRUE,legend="none")
                     #ggsave("Figures/Final Figures/Submission 3/TotalBenefits_orc.png",dpi=600)
                 
@@ -2101,6 +2114,7 @@
         results_df[results_df$formula=="lin" & results_df$iso3=="CHN",]
         
         #write.csv(results_df,"Damage_coef_Submission3v2_06052023.csv")
+        results_df <- read.csv("Data/Damage_coef_Submission3v2_06052023.csv")
             
       
          
@@ -2143,7 +2157,8 @@
                     NK_Market=wealth2018$NforestT,
                     NK_NonMarket=(wealth2018$NforestES + wealth2018$Npa),year=2018)
                     glimpse(w2018)
-            write.csv(w2018,file="Data/w2018.csv")
+            #write.csv(w2018,file="Data/w2018.csv")
+            w2018 <- read.csv(w2018,file="Data/w2018.csv")
 
             glimpse(world)
             glimpse(results_df)
@@ -2159,6 +2174,8 @@
             cmn <- map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="lpj"),]
 
 
+            save(map_coef,file="Data/DataForFigures/map_coef.Rds")
+                    
             Map_MarketDam <-  ggplot(map_coef[which(map_coef$formula=="lin" & map_coef$dgvm=="lpj" & map_coef$capital=="mN"   ),]) +
                 theme_void()+
                 geom_sf(data=world,aes(geometry = geom))+

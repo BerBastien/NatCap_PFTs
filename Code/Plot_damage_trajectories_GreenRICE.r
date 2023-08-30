@@ -1,12 +1,14 @@
 #setup#
 
-    x <- c('arrow','raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth")
+    x <- c('arrow','raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth","ddply")
     lapply(x, require, character.only = TRUE)
     '%notin%' <- Negate('%in%')
-    
+
     setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
     
-    GR_Results <- read_parquet("Results/06132023_noS/resultsLinearLPJ.parquet")
+    
+    GR_Results <- read_parquet("Results/06132023/resultsLinearLPJ.parquet")
+    #GR_Results <- read_parquet("Results/06132023_noS/resultsLinearLPJ.parquet")
     glimpse(GR_Results)    
 
     GR_Results <- GR_Results[-which(GR_Results$n=="rjan57" & GR_Results$r5=="r5oecd"),]
@@ -103,8 +105,8 @@
 
     
 
-    ddply(GR_Results[which(GR_Results$t==18),], .(r5),   # so by asset class invoke following function
-      function(x) data.frame(npvr5=weighted.mean(x$NPV_perc, x$pop)))
+    #ddply(GR_Results[which(GR_Results$t==18),], .(r5),   # so by asset class invoke following function
+    #  function(x) data.frame(npvr5=weighted.mean(x$NPV_perc, x$pop)))
 
     GR_Results$ES_change[which(GR_Results$t==18)]>0
 
@@ -175,6 +177,9 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
      guides(color=guide_legend(title="Region"))
 
     ES2100    
+    
+    GR_Results_lpj <- GR_Results
+    #save(GR_Results_lpj,file="Data/DataForFigures/GR_Results_lpj.Rds")
      
      ggarrange(GDP2100,ES2100,common.legend=TRUE,legend="bottom")
      results2100lpj <- ggarrange(GDP2100,ES2100,common.legend=TRUE,legend="bottom")
@@ -188,24 +193,6 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
      GR_Results2100$n[which(GR_Results2100$ES_change>0)]
 
      glimpse(world)
-
-     world$negative <- 1
-     world$negative[world$iso_a2=="EE" |world$iso_a2=="US"|world$iso_a2=="AU"|world$iso_a2=="LT"|world$iso_a2=="LV"|world$iso_a2=="CL"|world$iso_a2=="CN"|world$iso_a2=="TR"] <- 0 
-
-     world_map <-  ggplot() +
-                  geom_sf(data = world, aes(fill = factor(negative == 1)), color = "gray60")
-
-    ggplot() +
-      geom_sf(data = world, aes(fill = factor(negative == 1)), color = "gray60") +
-      geom_hline(yintercept = 23.43663, linetype = "dashed", color = "red") +  # Tropic of Cancer
-      geom_hline(yintercept = -23.43663, linetype = "dashed", color = "red")  # Tropic of Capricorn
-          world_map+
-            geom_path(data = world, aes(group = iso_a2), color = "blue", linetype = "dashed", 
-                subset = (name_long %in% c("Tropic of Cancer", "Tropic of Capricorn")))
-
-     #ggsave("Figures/Final figures/Submission 3/Change_GDP_ES_in2100_submission3.png",dpi=600)
-
-
 
     GR_Results$country <-(GR_Results$n)
     GR_Results$Continent <-(GR_Results$r5)
@@ -233,14 +220,14 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
     library(ggbreak) 
     
     glimpse(GR_Results)
+    
+    GR_Results_lpj_traj <- GR_Results
+    #save(GR_Results_lpj_traj,file="Data/DataForFigures/GR_Results_lpj_traj.Rds")
     plot_trajectory <- ggplot(GR_Results,
      aes(x=ES_change,y=GDP_change_perc,color=r5,group=n))+
-     #aes(x=es_change*100,y=gdp_change*100,group=countrycode))+
-     #geom_hline(aes(yintercept=0),linetype="dashed")+
-     #geom_vline(aes(xintercept=0),linetype="dashed")+
      geom_hline(aes(yintercept=0))+
      geom_vline(aes(xintercept=0))+
-       geom_line()+
+      geom_line()+
        #geom_text(data = GR_Results[which(GR_Results$year %in% c(2100) ),], aes(x=ES_change,y=GDP_change_perc,color=r5,label=n),alpha=0.4)+ 
 
        geom_point(data = GR_Results[which(GR_Results$year %in% c(2050,2080,2100) ),], 
@@ -260,22 +247,20 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
        ylab("Annual GDP change (%)\n") + ggtitle("")  +
        #scale_y_break(c(-0.6, 0.1))+
        #coord_cartesian(xlim=c(-45,10),ylim=c(-0.6, 0.1)) +
-       xlab("Annual non-market benefits change (%)")
+       xlab("Annual non-market benefits change (%)")+
+       scale_color_scico_d()
+
+       plot_trajectory
   
        
        
-       plot_trajectory
-       #ggarrange(plot_trajectory,results2100lpj,ncol=1,heights=c(3,1))
-       #ggsave("Figures/Final figures/Submission 3/Results_noS.png",dpi=600)
+       leg_trj <-  get_legend(plot_trajectory)
 
+        maxyear <- aggregate(year~country, data=GR_Results,FUN="max")
+        maxyear$countrymax <- paste0(maxyear$country,maxyear$year)
+        GR_Results$countrymax <- paste0(GR_Results$country,GR_Results$year)
 
-         leg_trj <-  get_legend(plot_trajectory)
-
-    maxyear <- aggregate(year~country, data=GR_Results,FUN="max")
-    maxyear$countrymax <- paste0(maxyear$country,maxyear$year)
-    GR_Results$countrymax <- paste0(GR_Results$country,GR_Results$year)
-
-    all_simmax <- GR_Results[GR_Results$countrymax %in% maxyear$countrymax,]
+        all_simmax <- GR_Results[GR_Results$countrymax %in% maxyear$countrymax,]
     
     # plot_count_es <- ggplot(GR_Results[which(GR_Results$year==2100),], # & abs(all_sim_mean$es_change)>0.01
     #     aes(x=es_change*100,fill=Continent))+
@@ -288,18 +273,20 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
 
     totpop <- sum(GR_Results$pop[which(GR_Results$year==2100)])
 
+    ordered_GR_lpj <- ordered_GR
+    #save(ordered_GR_lpj,file="Data/DataForFigures/ordered_GR_lpj.Rds")
     plot_count_es <- ggplot(ordered_GR, #& abs(all_sim_mean$gdp_change)>0.01
         aes(x=(ES_change),y=cumsum(100*pop/totpop)))+
         #geom_bar(stat="identity")+
         geom_line(color="gray")+
         geom_point(aes(color=r5),shape=15)+
         xlim(c(-45,10))+
-        theme_minimal()+ ylab("Cumulative \npopulation in 2100 (%)")+xlab('')
+        theme_minimal()+ ylab("Cumulative \npopulation in 2100 (%)")+xlab('')+
+       scale_color_scico_d()
     plot_count_es
 
 
     ordered_GR <- GR_Results[which(GR_Results$year==2100),]
-    glimpse(ordered_GR)
     #ordered_GR$GDPpc <- ordered_GR$YGROSS_baseline/ordered_GR$pop
     ordered_GR$GDPpc <- ordered_GR$YGROSS2020*10^6/ordered_GR$pop2020
     ordered_GR <- ordered_GR[order(ordered_GR$GDPpc),]
@@ -318,15 +305,19 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
         geom_hline(aes(yintercept=88.74806),linetype="dashed")+
         #xlim(c(-45,10))+
         labs(color="Region")+
-        theme_minimal()+ ylab("Cumulative global GDP \ndamages in 2100 (% of total)")+xlab('GDP per capita in 2020 ($ per person)')
+        theme_minimal()+ ylab("Cumulative global GDP \ndamages in 2100 (% of total)")+xlab('GDP per capita in 2020 ($ per person)')+
+       scale_color_scico_d()
     plot_distribution_damages
+    ordered_GR_dam_lpj <- ordered_GR
+    #save(ordered_GR_dam_lpj,file="Data/DataForFigures/ordered_GR_dam_lpj.Rds")
     #ggsave("Figures/Final figures/Submission 3/Distribution_damages.png",dpi=600)
 
 
     plot_count_gdp <- ggplot(GR_Results[which(GR_Results$year==2100),], #& abs(all_sim_mean$gdp_change)>0.01
         aes(x=gdp_change*100,fill=Continent))+xlab('')+#xlim(-15,6)+
         ylab("count in 2100")+
-        geom_histogram()+theme_minimal()+coord_flip() 
+        geom_histogram()+theme_minimal()+coord_flip() +
+       scale_color_scico_d()
 
     glimpse(GR_Results[which(GR_Results$year==2100),])
 
@@ -338,24 +329,29 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
         geom_point(aes(color=r5),shape=15)+
         theme_bw() + coord_flip() + ylab("Population in 2100 (%)")+ 
           #scale_y_break(c(-2.8, -2))+
-      scale_x_continuous(trans = scales::pseudo_log_trans())+theme_minimal()+xlab('')
+      scale_x_continuous(trans = scales::pseudo_log_trans())+theme_minimal()+xlab('')+
+       scale_color_scico_d()
     plot_count_gdp
 
-ordered_GR <- GR_Results[which(GR_Results$year==2100),]
-ordered_GR <- ordered_GR[order(-ordered_GR$GDP_change_perc),]
-plot_count_gdp_cum <- ggplot(ordered_GR, #& abs(all_sim_mean$gdp_change)>0.01
+    ordered_GR <- GR_Results[which(GR_Results$year==2100),]
+    ordered_GR <- ordered_GR[order(-ordered_GR$GDP_change_perc),]
+    plot_count_gdp_cum <- ggplot(ordered_GR, #& abs(all_sim_mean$gdp_change)>0.01
     aes(x=(GDP_change_perc),y=cumsum(100*pop/totpop)))+
     #geom_bar(stat="identity")+
     geom_line(color="gray")+
     geom_point(aes(color=r5),shape=15)+
-    xlim(c(-0.65,0.1))+ 
+    #xlim(c(-0.65,0.1))+ 
     #xlim(c(-2.8,0))+ 
     theme_bw() + coord_flip() + ylab("Cumulative\npopulation \nin 2100 (%)")+
-    theme_minimal()+xlab('')
+    theme_minimal()+xlab('')+
+       scale_color_scico_d()
 
-plot_count_gdp_cum
-#install.packages("ggridges")
-#library("ggridges")
+    ordered_GR_lpj_gdp <- ordered_GR
+    #save(ordered_GR_lpj_gdp,file="Data/DataForFigures/ordered_GR_lpj_gdp.Rds")
+
+    plot_count_gdp_cum
+    #install.packages("ggridges")
+    #library("ggridges")
 
 
 
