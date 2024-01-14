@@ -1453,8 +1453,8 @@
 
 
 # Calculate Nat Cap Damage
-            load(file="Data/PFT_all_data_3dgvms_cveg.Rda")
-            
+            load(file="Data/PFT_all_data_3dgvms_cveg.Rda") #here
+            glimpse(a)
             levels(factor(a$DGVM))
             wealth2018 <- wealth_data[which(wealth_data$year==2018),]
                                     extra_ind_vars <- c("pct_covered","logGDP")

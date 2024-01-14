@@ -1,8 +1,9 @@
 #Plot Manuscript Figures
 dir1 <- "C:/Users/basti/Box/VegetationData/"
 setwd('C:\\Users\\basti\\Documents\\GitHub\\NatCap_PFTs')
-x <- c('raster',"hacksaw", 'ggpubr','dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth","scico","writexl","ggsci","cowplot")
+x <- c('raster',"hacksaw", 'ggpubr',"tidyverse",'dplyr','ncdf4','ggplot2','countrycode','tidyverse','RColorBrewer','colorspace','spData','sf','lfe','marginaleffects','rgdal',"rnaturalearth","scico","writexl","ggsci","cowplot")
 lapply(x, require, character.only = TRUE)
+library("dplyr")
 my.palette <- brewer.pal(n = 10, name = "BrBG")
 `%notin%` <- Negate(`%in%`)
 vector_lpj_names <- c("Boreal summergreen \n needleleaved",
@@ -19,16 +20,17 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
                     pal_temp <- colorRampPalette(brewer.pal(4, "RdPu"))
                     pal_trop <- colorRampPalette(brewer.pal(4, "Greens"))
                     pal <- palette(brewer.pal(n = 3, name = "Spectral"))
+pal <- brewer.pal(n = 3, name = "RdYlBu")
     
     ## Figure 1
         
         load(file="Data/DataForFigures/ww.Rds")
         scaleFUN <- function(x) sprintf("%.4f", x)
-        ww_subset <- ww %>% filter(year==2018) %>% select(mN,nN,r5,GDP,Population,countryname)
+        ww_subset <- ww %>% filter(year==2018) %>% dplyr::select(mN,nN,r5,GDP,Population,countryname)
         ww_subset$nN <- ww_subset$nN*100
         ww_subset$mN <- ww_subset$mN*100
 
-        ggplot(ww_subset,aes(x=nN,y=mN))+
+        plot <- ggplot(ww_subset,aes(x=nN,y=mN))+
         theme_bw() +
         geom_density_2d_filled(contour_var = "ndensity",aes(fill=r5,alpha=..level..),bins=4,size=1)+
         scale_alpha_discrete(range = c(0,0.9,1,1),guide = guide_none()) +
@@ -41,7 +43,10 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         scale_fill_npg(name="Region")+
         scale_size_continuous(name="GDP per \ncapita in 2018")
 
-        #ggsave("Figures/ManuscriptFigures/F1_NatCap_R5.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/F1_vector.png",dpi=600)
+        combined_plot <- ggarrange(ggarrange(ggplot()+theme_void(),plot,ncol=2,widths=c(1,2)),ggplot()+theme_void(),ncol=1,heights=c(2,1))
+        combined_plot
+        ggsave(filename="Figures/ManuscriptFigures/F1_vector.pdf", plot=combined_plot, width=10, height=7)
         #write.csv(ww_subset,"Figures/ManuscriptFigures/SourceData/F1_NatCap_R5.csv")
     ## Figure 1
 
@@ -61,8 +66,9 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
             coord_flip()+theme(legend.text=element_text(size=7))+theme(legend.key.size = unit(0.5, "cm"))
         
         
-        load("Data/DataForFigures/PFT_change.Rds")
-        write_xlsx(list(PanelA = PFTs11_horizons3, PanelB = PFT_change), "Figures/ManuscriptFigures/SourceData/Fig2.xlsx") 
+        load("C:\\Users\\basti\\Documents\\GitHub\\BiomeShifts_NaturalCapital\\Data\\DataForFigures\\PFT_change.Rds")
+        #write_xlsx(list(PanelA = PFTs11_horizons3, PanelB = PFT_change), "Figures/ManuscriptFigures/SourceData/Fig2.xlsx") 
+        PFT_change <- read_xlsx("Figures/ManuscriptFigures/SourceData/Fig2.xlsx",sheet="PanelB") 
             
         pft_mov_change <- ggplot(PFT_change)+
             geom_col(aes(yPresent,Future_Change*100,fill=PFT2C))+
@@ -74,6 +80,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
             scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
             guides(fill=guide_legend(title="", ncol=3))+
             coord_flip()+theme(legend.text=element_text(size=7))+theme(legend.key.size = unit(0.5, "cm"))
+        
         ggarrange(Present_dist_col,pft_mov_change,ncol=2,common.legend=TRUE,legend="bottom")
 
         
@@ -130,7 +137,9 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         map_coef_lpj2 <- map_coef %>% filter(formula=="lin",dgvm=="lpj",capital=="nN")      
 
         pft_es_lpj$Benefits <- pft_es_lpj$Benefits/100
-        pft_es_lpj <- pft_es_lpj %>% select(Benefits,Biome,Type)
+        pft_es_lpj <- pft_es_lpj %>% dplyr::select(Benefits,Biome,Type)
+        glimpse(pft_es_lpj)     
+        glimpse(ES_val_lpj5)   
         
         ESValplot1 <- ggplot(pft_es_lpj)+
                 geom_boxplot(aes(x=(Benefits),y=Biome,
@@ -149,7 +158,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         
         levels(ES_val_lpj5$PFT_code) <- vector_lpj_names
         ES_val_lpj5$TotalValES_gdp <- 100*ES_val_lpj5$TotalValES_gdp
-        ES_val_lpj5 <- ES_val_lpj5 %>% select(PFT_code,TotalValES_gdp,region_un)
+        ES_val_lpj5 <- ES_val_lpj5 %>% dplyr::select(PFT_code,TotalValES_gdp,region_un)
         
         ESValplot <-  ggplot(ES_val_lpj5,aes(x=region_un,y=TotalValES_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
                                     geom_bar(stat="identity")+ scale_fill_manual(values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
@@ -162,7 +171,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         
         levels(ES_val_lpj6$PFT_code) <- vector_lpj_names
         ES_val_lpj6$TotalValGDP_gdp <- 100*ES_val_lpj6$TotalValGDP_gdp
-        ES_val_lpj6 <- ES_val_lpj6 %>% select(PFT_code,TotalValGDP_gdp,region_un)
+        ES_val_lpj6 <- ES_val_lpj6 %>% dplyr::select(PFT_code,TotalValGDP_gdp,region_un)
 
         GDPValplot <-  ggplot(ES_val_lpj6,aes(x=region_un,y=TotalValGDP_gdp,fill=PFT_code))+ #2.32 is adjustement for making up for a bug in the code
                                     geom_bar(stat="identity")+ scale_fill_manual(labels=vector_lpj_names,values = c(pal_boreal(4),pal_temp(3), pal_trop(4)))+
@@ -179,7 +188,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
                
         Map_MarketDam <-  ggplot(map_coef_lpj1) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -192,7 +201,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         Map_NonmarketDam <-  ggplot(map_coef_lpj2) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -211,6 +220,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         combined_plot <- ggarrange(ggarrange(ggarrange(ESValplot1,leg1,widths=c(1,1),align="v"),ggarrange(GDPValplot,ESValplot,ncol=2,common.legend=TRUE,legend="none")),
         ggarrange(Map_MarketDam,Map_NonmarketDam,ncol=2,widths=c(1,1)),heights=c(6,5),ncol=1)
         combined_plot
+
 
         
 
@@ -373,7 +383,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         final_plot <- ggarrange(elas_area,elas_cveg)
         final_plot
-        #ggsave("Figures/ManuscriptFigures/FigED2.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED2.jpeg",dpi=600)
         #ggsave(filename="Figures/ManuscriptFigures/FigED2.pdf", plot=final_plot, width=10, height=3)
     ## Figure ED 2
 
@@ -412,7 +422,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
 
             combined_plot 
-            #ggsave("Figures/ManuscriptFigures/FigED3.png",dpi=600)
+            #ggsave("Figures/ManuscriptFigures/FigED3.jpeg",dpi=600)
             #ggsave(filename="Figures/ManuscriptFigures/FigED3.pdf", plot=combined_plot, width=5, height=7)
         
             #write_xlsx(list(Top = results_df_sub_1,Bottom = results_df_sub), "Figures/ManuscriptFigures/SourceData/FigED3.xlsx") 
@@ -449,7 +459,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
             coord_flip()+theme(legend.text=element_text(size=7))+theme(legend.key.size = unit(0.5, "cm"))
         ggarrange(Present_dist_col,pft_mov_change,ncol=2,common.legend=TRUE,legend="bottom")
         
-        write_xlsx(list(PanelA = PFTs11_horizons3_car, PanelB = PFT_change_car), "Figures/ManuscriptFigures/SourceData/FigED4.xlsx")
+        #write_xlsx(list(PanelA = PFTs11_horizons3_car, PanelB = PFT_change_car), "Figures/ManuscriptFigures/SourceData/FigED4.xlsx")
 
 
         
@@ -494,7 +504,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         combined_plot <- ggarrange(ggarrange(Present_dist_col,pft_mov_change,ncol=2,common.legend=TRUE,legend="bottom"),ggarrange(d_area,dcveg,nrow=2,common.legend=TRUE,legend="bottom"),ncol=2)
         combined_plot 
-        #ggsave("Figures/ManuscriptFigures/FigED4.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED4.jpeg",dpi=600)
         #ggsave(filename="Figures/ManuscriptFigures/FigED4.pdf", plot=combined_plot, width=10, height=6)
 
     ## Figure ED 4
@@ -572,7 +582,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         combined_plot <- ggarrange(ggarrange(Present_dist_col,pft_mov_change,ncol=2,common.legend=TRUE,legend="bottom"),ggarrange(d_area,dcveg,nrow=2,common.legend=TRUE,legend="bottom"),ncol=2)
         combined_plot 
-        #ggsave("Figures/ManuscriptFigures/FigED5.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED5.jpeg",dpi=600)
         #ggsave(filename="Figures/ManuscriptFigures/FigED5.pdf", plot=combined_plot, width=10, height=6.5)
 
     ## Figure ED 5
@@ -616,7 +626,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
                                             plot.subtitle = element_text(size = 9, hjust = 0.5)) +
                                     labs(subtitle = "Non-Market benefits")
         
-        levels(ES_val_car6$PFT_code) <- vector_car_names
+        #levels(ES_val_car6$PFT_code) <- vector_car_names
         ES_val_car6$TotalValGDP_gdp <- 100*ES_val_car6$TotalValGDP_gdp
         ES_val_car6 <- ES_val_car6 %>% select(PFT_code,TotalValGDP_gdp,region_un)
 
@@ -635,7 +645,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
                
         Map_MarketDam <-  ggplot(map_coef_car1) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -648,7 +658,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         Map_NonmarketDam <-  ggplot(map_coef_car2) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -669,7 +679,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         combined_plot      
 
-        #ggsave("Figures/ManuscriptFigures/FigED6.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED6.jpeg",dpi=900)
         #ggsave(filename="Figures/ManuscriptFigures/FigED6.pdf", plot=combined_plot, width=10, height=7)  
 
     ## Figure ED 6
@@ -735,7 +745,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
                
         Map_MarketDam <-  ggplot(map_coef_orc1) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -748,7 +758,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         Map_NonmarketDam <-  ggplot(map_coef_orc2) +
                 theme_void()+
-                geom_sf(data=world,aes(geometry = geom))+
+                geom_sf(data=world,aes(geometry = geometry),fill="white")+
                 geom_sf(aes(geometry = geom, fill =100* coef)) +
                 scale_fill_gradientn(colours = pal,limits=c(-010,010),
                     na.value="transparent",name="Damage at 1C (%)",oob = scales::squish)+
@@ -769,7 +779,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         combined_plot      
 
-        #ggsave("Figures/ManuscriptFigures/FigED7.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED7.jpeg",dpi=600)
         #ggsave(filename="Figures/ManuscriptFigures/FigED7.pdf", plot=combined_plot, width=10, height=6)  
 
     ## Figure ED 7
@@ -862,8 +872,10 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
             trajorc+ggtitle("ORCHIDEE-DGVM")+xlab(""),
             trajcar+ggtitle("CARAIB")+xlab("Annual non-market benefits change (%)"),
             nrow=3,ncol=1,common.legend=TRUE,legend="bottom")
+
+        combined_plot
         
-        #ggsave("Figures/ManuscriptFigures/FigED8.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED8.jpeg",dpi=900)
         #ggsave(filename="Figures/ManuscriptFigures/FigED8.pdf", plot=combined_plot, width=6, height=10)  
 
         
@@ -957,9 +969,10 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         results2100lpj <-ggarrange(GDP2100,ES2100,common.legend=TRUE,legend="bottom")
         combined_plot <- ggarrange(results2100lpj,results2100orc,results2100car,ncol=1,common.legend=TRUE,legend="bottom")
         combined_plot        
-        ggsave("Figures/ManuscriptFigures/FigED9.png",dpi=600)
-        ggsave(filename="Figures/ManuscriptFigures/FigED9.pdf", plot=combined_plot, width=6, height=10)  
+        #ggsave("Figures/ManuscriptFigures/FigED9.jpeg",dpi=900)
+        #ggsave(filename="Figures/ManuscriptFigures/FigED9.pdf", plot=combined_plot, width=6, height=10)  
 
+        write_xlsx(list(Top = GR_Results_lpj, Mid = GR_Results_orc, Bottom = GR_Results_car), "Figures/ManuscriptFigures/SourceData/FigED9.xlsx") 
 
     ## Figure ED 9
 
@@ -990,6 +1003,13 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
         load("Data/DataForFigures/GR_Results_lpj_traj_noS.Rds")
         GR_Results  <- GR_Results_lpj_traj_noS
+        totpop <- sum(GR_Results$pop[which(GR_Results$year==2100)])
+        x_gdp <- GR_Results$GDP_change_perc[which(GR_Results$year %in% c(2100))]
+        x_es <- GR_Results$ES_change[which(GR_Results$year %in% c(2100))]
+        w <- GR_Resultsj$pop[which(GR_Results$year %in% c(2100))]
+        pop_mean_gdp_lpj <- weighted.mean(x=x_gdp,w=w)
+        pop_mean_es_lpj <- weighted.mean(x=x_es,w=w)
+        
         GR_Results_lpj_traj_noS_source <- GR_Results %>% select(ES_change,GDP_change_perc,r5,n,year,ES_change_lb,ES_change_ub,GDP_change_perc_ub,GDP_change_perc_lb)
         plot_trajectory <- ggplot(GR_Results,
             aes(x=ES_change,y=GDP_change_perc,color=r5,group=n))+
@@ -1014,8 +1034,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         
         combined_plot <- ggarrange(plot_trajectory,results2100lpj_noS,ncol=1,heights=c(2,1))
             combined_plot
-        combined_plot        
-        #ggsave("Figures/ManuscriptFigures/FigED10.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED10.jpeg",dpi=600)
         #ggsave(filename="Figures/ManuscriptFigures/FigED10.pdf", plot=combined_plot, width=6, height=10)  
 
         #write_xlsx(list(Top = GR_Results_lpj_traj_noS_source, Bottom = GR_Results_bottom), "Figures/ManuscriptFigures/SourceData/FigED10.xlsx") 
@@ -1137,7 +1156,7 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
         plot_distribution_damages <- ggarrange(plot_distribution_damages_lpj,plot_distribution_damages_orc,plot_distribution_damages_car,ncol=1,common.legend=TRUE,legend="bottom")
          
         plot_distribution_damages
-        #ggsave("Figures/ManuscriptFigures/FigED11.png",dpi=600)
+        #ggsave("Figures/ManuscriptFigures/FigED11.jpeg",dpi=900)
         #ggsave(filename="Figures/ManuscriptFigures/FigED11.pdf", plot=plot_distribution_damages, width=5.3, height=10)  
 
     ## Figure ED 11
@@ -1659,6 +1678,32 @@ pal_boreal <- colorRampPalette(brewer.pal(4, "PuBu"))
 
 
     ## Figure to Response to Reviewers
+
+    # What countries gain?
+    ## Figure 4
+        
+        load("Data/DataForFigures/GR_Results_lpj_traj.Rds")
+        load("Data/DataForFigures/ordered_GR_lpj.Rds")
+        load(file="Data/DataForFigures/GR_Results_orc.Rds")
+        load(file="Data/DataForFigures/GR_Results_car.Rds")
+
+        c_lpj <- GR_Results_lpj_traj %>% filter(year ==2100) %>% filter(ES_change >0) %>% select(country, ES_change)
+        c_car <- GR_Results_car %>% filter(year ==2100) %>% filter(ES_change >0) %>% select(country, ES_change)
+        c_orc <- GR_Results_orc %>% filter(year ==2100) %>% filter(ES_change >0) %>% select(n, ES_change)
+
+        GR_Results_lpj_traj %>% filter(country =="mex")%>% filter(year ==2100)
+        glimpse(GR_Results_lpj_traj )
+
+        c_lpj %>% filter(country %in% c_car$country)  %>% filter(country %in% c_orc$country)      
+
+        c_lpj %>% summarise(meanES = mean(ES_change))
+
+        
+        
+        c_lpj <- GR_Results_lpj_traj %>% filter(year ==2100) %>% filter(ES_change <0) %>% select(country, ES_change)
+        c_lpj %>% summarise(meanES = mean(ES_change))
+        
+    ## Figure 4
 
 
 

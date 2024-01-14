@@ -134,7 +134,12 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
     GR_Results$ES_dam <- (GR_Results$nat_omega_damages_nN*0.03)*(1+(0.593*(100*((GR_Results$YGROSS_damages-GR_Results$YGROSS2020)/GR_Results$YGROSS2020)))/100)
     GR_Results$ES_nodam <- (GR_Results$nat_omega_baseline_nN*0.03)*(1+(0.593*(100*((GR_Results$YGROSS_baseline-GR_Results$YGROSS2020)/GR_Results$YGROSS2020)))/100)
     GR_Results$ES_change <- 100*(GR_Results$ES_dam-GR_Results$ES_nodam)/GR_Results$ES_nodam
-    
+    GR_Results$ES_change_val <- GR_Results$ES_dam-GR_Results$ES_nodam
+    GR_Results$ES_change_val_percGDP <- GR_Results$ES_change_val / GR_Results$YGROSS_damages
+    ggplot(GR_Results) + geom_line(aes(x=year,y=ES_change_val,group=n))
+    glimpse(GR_Results)
+    GR_Results %>% filter(t==18) %>% group_by(r5) %>% summarise(ES_change_val=sum(ES_change_val,na.rm=T),YGROSS_damages=sum(YGROSS_damages,na.rm=T),ES_change_val_percGDP=median(ES_change_val_percGDP,na.rm=T))
+
     GR_Results2100 <- GR_Results[which(GR_Results$t==18),] 
     GR_Results2100$ES_change[which(GR_Results2100$ES_change<0)]
     GR_Results$t[GR_Results$ES_nodam==0]
@@ -178,8 +183,8 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
 
     ES2100    
     
-    GR_Results_lpj <- GR_Results
-    #save(GR_Results_lpj,file="Data/DataForFigures/GR_Results_lpj.Rds")
+    GR_Results_lpj_noS <- GR_Results
+    save(GR_Results_lpj_noS,file="Data/DataForFigures/GR_Results_lpj_noS.Rds")
      
      ggarrange(GDP2100,ES2100,common.legend=TRUE,legend="bottom")
      results2100lpj <- ggarrange(GDP2100,ES2100,common.legend=TRUE,legend="bottom")
@@ -221,8 +226,8 @@ GDPNPV <- ggplot(GR_Results[which(GR_Results$t==18),])+
     
     glimpse(GR_Results)
     
-    GR_Results_lpj_traj <- GR_Results
-    #save(GR_Results_lpj_traj,file="Data/DataForFigures/GR_Results_lpj_traj.Rds")
+    #GR_Results_lpj_traj_noS <- GR_Results
+    #save(GR_Results_lpj_traj_noS,file="Data/DataForFigures/GR_Results_lpj_traj_noS.Rds")
     plot_trajectory <- ggplot(GR_Results,
      aes(x=ES_change,y=GDP_change_perc,color=r5,group=n))+
      geom_hline(aes(yintercept=0))+
