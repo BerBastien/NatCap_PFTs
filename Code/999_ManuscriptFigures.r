@@ -145,9 +145,9 @@ pal <- brewer.pal(n = 3, name = "RdYlBu")
                 geom_boxplot(aes(x=(Benefits),y=Biome,
                     fill=Type,middle=median((Benefits)))) +
                 theme_bw()+ coord_cartesian(xlim=c(0,200))+
-                theme(axis.title.y = element_blank(), 
-                axis.ticks.y = element_blank(),
-                axis.text.y = element_blank())+xlab("")+ labs(title =expression(bold("a.") ~ " Benefits per area ($/ha/year)")) +
+                #theme(axis.title.y = element_blank(), 
+                #axis.ticks.y = element_blank(),
+                #axis.text.y = element_blank())+xlab("")+ labs(title =expression(bold("a.") ~ " Benefits per area ($/ha/year)")) +
                                     theme(plot.title = element_text(size = 12, hjust = 0.5),
                                             plot.subtitle = element_text(size = 9, hjust = 0.5)) +
                                     labs(subtitle = "Non-Market benefits")+
@@ -1707,3 +1707,6 @@ pal <- brewer.pal(n = 3, name = "RdYlBu")
 
 
 
+pft <- read.csv("C:\\Users\\basti\\Downloads\\PFT_ES_all.csv")
+glimpse(pft)
+hist(pft$area)

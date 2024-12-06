@@ -138,11 +138,14 @@
         names(r5)<-c("r5","countrycode")
 
         wealth_data <- merge(wealth_data,r5,by="countrycode")
+        glimpse(wealth_data)
     # Forest Rents (end)
 
     wealth2018 <- wealth_data[which(wealth_data$year==2018),]
+    write.csv(wealth2018,"Data/wealth2018.csv")
     wealth_data$nN <- (wealth_data$NforestES+wealth_data$Npa)/wealth_data$TotalWealth
     wealth_data$mN <- (wealth_data$NforestT)/wealth_data$TotalWealth
+    write.csv(wealth_data,"Data/wealth_data.csv")
 
 
     ww <- wealth_data[which(wealth_data$nN>quantile(wealth_data$nN,0.05,na.rm=TRUE) &
@@ -200,8 +203,8 @@
     geom_density_2d_filled(contour_var = "ndensity",aes(fill=r5,alpha=..level..),bins=4,size=1)+
     scale_alpha_discrete(range = c(0,0.9,1,1),guide = guide_none()) +
     geom_point(aes(x=100*nN,y=100*mN,size=GDP/Population),alpha=0.5)+
-    scale_y_continuous(trans="log2",labels=scaleFUN)+
-    scale_x_continuous(trans="log2",labels=scaleFUN)+
+    scale_y_continuous(trans="log2")+
+    scale_x_continuous(trans="log2")+
         xlab("Non-market natural capital \n(% of Total Wealth)") + 
         ylab("Market natural capital \n(% of Total Wealth)") + 
         scale_fill_discrete(name="Region")+
